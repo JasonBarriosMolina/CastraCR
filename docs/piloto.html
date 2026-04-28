@@ -18,6 +18,8 @@
       --amber:       #f59e0b;
       --amber-light: #fef3c7;
       --red:         #ef4444;
+      --purple:      #8b5cf6;
+      --purple-light:#ede9fe;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -36,7 +38,6 @@
       position: relative;
       overflow: hidden;
     }
-
     header::before {
       content: '🐕 🐈 🐾 🐕 🐈 🐾 🐕 🐈 🐾 🐕 🐈';
       position: absolute;
@@ -46,7 +47,6 @@
       letter-spacing: 1rem;
       pointer-events: none;
     }
-
     .header-tag {
       display: inline-block;
       background: rgba(255,255,255,.14);
@@ -60,7 +60,6 @@
       border-radius: 999px;
       margin-bottom: 1.4rem;
     }
-
     header h1 {
       font-size: clamp(2rem, 5.5vw, 3.2rem);
       font-weight: 800;
@@ -70,13 +69,11 @@
       margin: 0 auto .9rem;
       letter-spacing: -.02em;
     }
-
     header h1 em { font-style: normal; color: #6ee7b7; }
-
     header .subtitle {
       color: rgba(255,255,255,.75);
       font-size: 1.05rem;
-      max-width: 540px;
+      max-width: 560px;
       margin: 0 auto;
       line-height: 1.7;
     }
@@ -89,22 +86,19 @@
       grid-template-columns: repeat(auto-fit, minmax(140px,1fr));
       text-align: center;
     }
-
     .stat-cell {
       padding: 1.4rem 1rem;
       border-right: 1px solid var(--border);
     }
     .stat-cell:last-child { border-right: none; }
-
     .stat-val   { font-size: 1.8rem; font-weight: 800; color: var(--green); line-height: 1; }
     .stat-label { font-size: .78rem; color: var(--muted); margin-top: .3rem; line-height: 1.35; }
 
     /* ── PAGE CONTAINER ── */
-    .page { max-width: 880px; margin: 0 auto; padding: 0 1.25rem 5rem; }
+    .page { max-width: 900px; margin: 0 auto; padding: 0 1.25rem 5rem; }
 
     /* ── SECTION ── */
     .block { margin-top: 3.8rem; }
-
     .section-tag {
       display: inline-block;
       font-size: .72rem;
@@ -115,11 +109,12 @@
       border-radius: 999px;
       margin-bottom: .7rem;
     }
-
     .tag-green  { background: var(--green-light); color: var(--green-dark); }
     .tag-blue   { background: #e0f2fe; color: #0c4a6e; }
     .tag-amber  { background: var(--amber-light); color: #92400e; }
     .tag-slate  { background: #f1f5f9; color: #475569; }
+    .tag-red    { background: #fee2e2; color: #991b1b; }
+    .tag-purple { background: var(--purple-light); color: #5b21b6; }
 
     h2 {
       font-size: clamp(1.5rem, 3.5vw, 2.2rem);
@@ -128,18 +123,100 @@
       line-height: 1.2;
       margin-bottom: .65rem;
     }
-
     h2 em { font-style: normal; color: var(--green); }
-
     p.lead {
       font-size: .97rem;
       color: var(--muted);
       line-height: 1.75;
-      max-width: 660px;
+      max-width: 680px;
       margin-bottom: 1.8rem;
     }
-
     hr.div { border: none; border-top: 1px solid var(--border); margin-top: 3.8rem; }
+
+    /* ── SOBREPOBLACIÓN STATS ── */
+    .overpop-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px,1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .overpop-card {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 1.25rem;
+      padding: 1.5rem 1.3rem;
+      border-top: 4px solid var(--red);
+      text-align: center;
+    }
+    .overpop-card .ov-icon { font-size: 2rem; margin-bottom: .6rem; }
+    .overpop-card .ov-val  { font-size: 2rem; font-weight: 800; color: var(--red); line-height: 1; margin-bottom: .3rem; }
+    .overpop-card .ov-lbl  { font-size: .82rem; color: var(--muted); line-height: 1.5; }
+
+    /* ── CADENA DE REPRODUCCIÓN (B) ── */
+    .chain-box {
+      background: var(--dark);
+      border-radius: 1.5rem;
+      padding: 2.2rem 2rem;
+      color: #fff;
+      margin-top: 1.5rem;
+    }
+    .chain-title {
+      font-size: .75rem;
+      font-weight: 700;
+      letter-spacing: .09em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,.4);
+      margin-bottom: 1.5rem;
+    }
+    .chain-steps {
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      flex-wrap: wrap;
+      margin-bottom: 1.5rem;
+    }
+    .chain-step {
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: .9rem;
+      padding: .9rem 1rem;
+      text-align: center;
+      flex: 1;
+      min-width: 90px;
+    }
+    .chain-step .cs-icon { font-size: 1.4rem; margin-bottom: .3rem; }
+    .chain-step .cs-num  { font-size: 1.4rem; font-weight: 800; color: #fca5a5; line-height: 1; }
+    .chain-step .cs-lbl  { font-size: .7rem; color: rgba(255,255,255,.4); margin-top: .2rem; }
+    .chain-arrow { color: rgba(255,255,255,.3); font-size: 1.4rem; flex-shrink: 0; }
+    @media(max-width:600px){
+      .chain-steps { gap: .3rem; }
+      .chain-arrow { display: none; }
+      .chain-step { min-width: 70px; }
+    }
+    .chain-conclusion {
+      background: rgba(239,68,68,.12);
+      border: 1px solid rgba(239,68,68,.25);
+      border-radius: 1rem;
+      padding: 1.2rem 1.4rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    .chain-conclusion .cc-text { font-size: .9rem; color: rgba(255,255,255,.75); line-height: 1.55; max-width: 500px; }
+    .chain-conclusion .cc-val  { font-size: 2.5rem; font-weight: 800; color: #fca5a5; white-space: nowrap; }
+    .chain-vs {
+      margin-top: 1rem;
+      background: rgba(16,185,129,.1);
+      border: 1px solid rgba(16,185,129,.25);
+      border-radius: 1rem;
+      padding: 1rem 1.4rem;
+      font-size: .88rem;
+      color: #6ee7b7;
+      line-height: 1.6;
+    }
+    .chain-vs strong { color: #a7f3d0; }
 
     /* ── PROBLEM CARDS ── */
     .problem-grid {
@@ -147,14 +224,12 @@
       grid-template-columns: repeat(auto-fit, minmax(190px,1fr));
       gap: 1rem;
     }
-
     .problem-card {
       background: #fff5f5;
       border: 1px solid #fca5a5;
       border-radius: 1.1rem;
       padding: 1.3rem 1.2rem;
     }
-
     .problem-card .icon { font-size: 1.8rem; margin-bottom: .6rem; }
     .problem-card h3 { font-size: .92rem; font-weight: 700; color: var(--dark); margin-bottom: .4rem; }
     .problem-card p  { font-size: .83rem; color: var(--muted); line-height: 1.55; }
@@ -165,7 +240,6 @@
       grid-template-columns: repeat(auto-fit, minmax(240px,1fr));
       gap: 1.2rem;
     }
-
     .benefit-card {
       background: #fff;
       border: 1px solid var(--border);
@@ -173,11 +247,9 @@
       padding: 1.5rem;
       border-left: 4px solid var(--green);
     }
-
     .benefit-card .icon { font-size: 2rem; margin-bottom: .7rem; }
     .benefit-card h3 { font-size: .97rem; font-weight: 800; color: var(--dark); margin-bottom: .4rem; }
     .benefit-card p  { font-size: .86rem; color: var(--muted); line-height: 1.6; }
-
     .benefit-card .highlight {
       display: inline-block;
       margin-top: .7rem;
@@ -196,78 +268,36 @@
       gap: 1rem;
       margin-top: 1.5rem;
     }
-
     @media(max-width:580px){ .compare { grid-template-columns: 1fr; } }
-
-    .before, .after {
-      border-radius: 1.25rem;
-      padding: 1.5rem;
-    }
-
-    .before {
-      border: 2px solid #fca5a5;
-      background: #fff5f5;
-    }
-
-    .after {
-      border: 2px solid var(--green);
-      background: #f0fdf4;
-      position: relative;
-    }
-
+    .before, .after { border-radius: 1.25rem; padding: 1.5rem; }
+    .before { border: 2px solid #fca5a5; background: #fff5f5; }
+    .after  { border: 2px solid var(--green); background: #f0fdf4; position: relative; }
     .after-badge {
-      position: absolute;
-      top: -0.7rem;
-      left: 50%;
+      position: absolute; top: -0.7rem; left: 50%;
       transform: translateX(-50%);
-      background: var(--green);
-      color: #fff;
-      font-size: .7rem;
-      font-weight: 800;
-      letter-spacing: .06em;
-      text-transform: uppercase;
-      padding: .2rem .9rem;
-      border-radius: 999px;
-      white-space: nowrap;
+      background: var(--green); color: #fff;
+      font-size: .7rem; font-weight: 800;
+      letter-spacing: .06em; text-transform: uppercase;
+      padding: .2rem .9rem; border-radius: 999px; white-space: nowrap;
     }
-
-    .compare-title {
-      font-size: .75rem;
-      font-weight: 800;
-      letter-spacing: .06em;
-      text-transform: uppercase;
-      margin-bottom: 1rem;
-    }
-
+    .compare-title { font-size: .75rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; margin-bottom: 1rem; }
     .before .compare-title { color: var(--red); }
     .after  .compare-title { color: var(--green-dark); }
-
     .crow {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      font-size: .87rem;
-      padding: .4rem 0;
-      border-bottom: 1px dashed var(--border);
-      gap: .5rem;
+      display: flex; justify-content: space-between; align-items: flex-start;
+      font-size: .87rem; padding: .4rem 0;
+      border-bottom: 1px dashed var(--border); gap: .5rem;
     }
-
     .crow:last-of-type { border-bottom: none; }
     .crow .lbl { color: var(--muted); }
     .before .crow .v { color: var(--red); font-weight: 700; text-align: right; }
     .after  .crow .v { color: var(--green-dark); font-weight: 700; text-align: right; }
-
     .ctotal {
-      margin-top: 1rem;
-      padding-top: 1rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
+      margin-top: 1rem; padding-top: 1rem;
+      display: flex; justify-content: space-between; align-items: baseline;
     }
-
     .before .ctotal { border-top: 2px solid #fca5a5; }
     .after  .ctotal { border-top: 2px solid var(--green); }
-
     .ctotal-lbl { font-size: .85rem; font-weight: 700; color: var(--dark); }
     .before .ctotal-v { font-size: 1.9rem; font-weight: 800; color: var(--red); }
     .after  .ctotal-v { font-size: 1.9rem; font-weight: 800; color: var(--green); }
@@ -275,305 +305,304 @@
     /* ── DELTA ── */
     .delta {
       margin-top: 1rem;
-      background: var(--green-light);
-      border: 1px solid #6ee7b7;
-      border-radius: 1rem;
-      padding: 1.1rem 1.4rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: .5rem;
+      background: var(--green-light); border: 1px solid #6ee7b7;
+      border-radius: 1rem; padding: 1.1rem 1.4rem;
+      display: flex; justify-content: space-between; align-items: center;
+      flex-wrap: wrap; gap: .5rem;
     }
-
     .delta-text { font-size: .9rem; font-weight: 600; color: var(--green-dark); }
     .delta-sub  { font-size: .78rem; color: #059669; margin-top: .15rem; }
     .delta-val  { font-size: 2rem; font-weight: 800; color: var(--green-dark); }
 
     /* ── MONEY BREAKDOWN ── */
     .money-dark {
-      background: var(--dark);
-      border-radius: 1.5rem;
-      padding: 2.2rem 2rem;
-      color: #fff;
-      margin-top: 1.5rem;
+      background: var(--dark); border-radius: 1.5rem;
+      padding: 2.2rem 2rem; color: #fff; margin-top: 1.5rem;
     }
-
     .money-title {
-      font-size: .75rem;
-      font-weight: 700;
-      letter-spacing: .09em;
-      text-transform: uppercase;
-      color: rgba(255,255,255,.4);
-      margin-bottom: 1.4rem;
+      font-size: .75rem; font-weight: 700; letter-spacing: .09em;
+      text-transform: uppercase; color: rgba(255,255,255,.4); margin-bottom: 1.4rem;
     }
-
     .split-bar {
-      height: 3rem;
-      border-radius: 999px;
-      display: flex;
-      overflow: hidden;
-      margin-bottom: 1rem;
+      height: 3rem; border-radius: 999px; display: flex; overflow: hidden; margin-bottom: 1rem;
     }
-
     .sb-org {
       background: linear-gradient(90deg, #10b981, #059669);
       display: flex; align-items: center; justify-content: center;
       width: 90%; color: #fff; font-weight: 800; font-size: .97rem;
     }
-
     .sb-plat {
       background: linear-gradient(90deg, #0891b2, #06b6d4);
       display: flex; align-items: center; justify-content: center;
       width: 10%; color: #fff; font-weight: 800; font-size: .9rem;
     }
-
     .money-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(150px,1fr));
-      gap: .9rem;
-      margin-top: 1.5rem;
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(150px,1fr));
+      gap: .9rem; margin-top: 1.5rem;
     }
-
     .mg-item {
-      background: rgba(255,255,255,.07);
-      border: 1px solid rgba(255,255,255,.1);
-      border-radius: .9rem;
-      padding: 1rem 1.1rem;
+      background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.1);
+      border-radius: .9rem; padding: 1rem 1.1rem;
     }
-
     .mg-label { font-size: .72rem; color: rgba(255,255,255,.42); margin-bottom: .25rem; }
     .mg-val   { font-size: 1.45rem; font-weight: 800; color: #fff; line-height: 1; }
     .mg-sub   { font-size: .72rem; color: rgba(255,255,255,.35); margin-top: .2rem; }
-
-    /* ── INFRA COST BOX ── */
-    .infra-box {
+    .platform-note {
       margin-top: 1.2rem;
-      background: rgba(16,185,129,.1);
-      border: 1px solid rgba(16,185,129,.3);
-      border-radius: 1rem;
-      padding: 1.3rem 1.5rem;
-    }
-
-    .infra-title {
-      font-size: .78rem;
-      font-weight: 800;
-      letter-spacing: .06em;
-      text-transform: uppercase;
-      color: #6ee7b7;
-      margin-bottom: 1rem;
-    }
-
-    .infra-rows { display: flex; flex-direction: column; gap: .4rem; }
-
-    .infra-row {
-      display: flex;
-      justify-content: space-between;
-      font-size: .82rem;
-    }
-
-    .infra-row .name { color: rgba(255,255,255,.55); }
-    .infra-row .cost { color: rgba(255,255,255,.8); font-weight: 600; }
-
-    .infra-total {
-      margin-top: .9rem;
-      padding-top: .9rem;
-      border-top: 1px solid rgba(16,185,129,.3);
-      display: flex;
-      justify-content: space-between;
-      font-size: .88rem;
-      font-weight: 800;
-    }
-
-    .infra-total .name { color: #a7f3d0; }
-    .infra-total .cost { color: #6ee7b7; font-size: 1.1rem; }
-
-    .infra-conclusion {
-      margin-top: .9rem;
+      background: rgba(255,255,255,.05);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: .9rem;
+      padding: 1rem 1.2rem;
       font-size: .8rem;
-      color: rgba(255,255,255,.45);
-      line-height: 1.55;
+      color: rgba(255,255,255,.4);
+      line-height: 1.6;
     }
+    .platform-note strong { color: rgba(255,255,255,.6); }
 
-    .infra-conclusion strong { color: #6ee7b7; }
+    /* ── REFUGIOS (C) ── */
+    .refugio-hero {
+      background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4c1d95 100%);
+      border-radius: 1.5rem;
+      padding: 2.2rem 2rem;
+      color: #fff;
+      margin-top: 1.5rem;
+    }
+    .refugio-title {
+      font-size: .75rem; font-weight: 700; letter-spacing: .09em;
+      text-transform: uppercase; color: rgba(255,255,255,.4); margin-bottom: 1.2rem;
+    }
+    .refugio-modes {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 1rem; margin-bottom: 1.5rem;
+    }
+    @media(max-width:560px){ .refugio-modes { grid-template-columns: 1fr; } }
+    .rmode {
+      background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.12);
+      border-radius: 1.1rem; padding: 1.4rem;
+    }
+    .rmode-icon  { font-size: 1.8rem; margin-bottom: .6rem; }
+    .rmode-title { font-size: .95rem; font-weight: 800; color: #fff; margin-bottom: .4rem; }
+    .rmode-desc  { font-size: .82rem; color: rgba(255,255,255,.55); line-height: 1.6; }
+    .rmode-badge {
+      display: inline-block; margin-top: .8rem;
+      font-size: .72rem; font-weight: 800;
+      padding: .2rem .8rem; border-radius: 999px;
+      background: rgba(167,243,208,.15); color: #6ee7b7;
+    }
+    .refugio-scenarios {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(200px,1fr));
+      gap: 1rem;
+    }
+    .rscen {
+      background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1);
+      border-radius: 1rem; padding: 1.3rem;
+    }
+    .rscen-label { font-size: .72rem; color: rgba(255,255,255,.4); letter-spacing: .06em; text-transform: uppercase; margin-bottom: .9rem; }
+    .rscen-name  { font-size: .9rem; font-weight: 800; color: #c4b5fd; margin-bottom: .7rem; }
+    .rscen-row   { display: flex; justify-content: space-between; font-size: .8rem; padding: .28rem 0; border-bottom: 1px solid rgba(255,255,255,.06); }
+    .rscen-row:last-of-type { border-bottom: none; }
+    .rscen-row .rr-l { color: rgba(255,255,255,.45); }
+    .rscen-row .rr-v { color: rgba(255,255,255,.85); font-weight: 700; }
+    .rscen-total {
+      margin-top: .9rem; padding-top: .9rem;
+      border-top: 1px solid rgba(139,92,246,.4);
+      display: flex; justify-content: space-between; align-items: baseline;
+    }
+    .rscen-total .rt-l { font-size: .8rem; font-weight: 700; color: rgba(255,255,255,.6); }
+    .rscen-total .rt-v { font-size: 1.5rem; font-weight: 800; color: #a78bfa; }
+    .refugio-price-box {
+      margin-top: 1.2rem;
+      background: rgba(16,185,129,.1); border: 1px solid rgba(16,185,129,.25);
+      border-radius: 1rem; padding: 1.2rem 1.4rem;
+      font-size: .88rem; color: #6ee7b7; line-height: 1.65;
+    }
+    .refugio-price-box strong { color: #a7f3d0; }
 
-    /* ── DONATION MODES ── */
-    .donation-modes {
+    /* ── CICLO VIRTUOSO (D) ── */
+    .cycle-wrap {
+      margin-top: 1.5rem;
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 1rem;
-      margin-top: 1.5rem;
     }
-
-    @media(max-width:540px){ .donation-modes { grid-template-columns: 1fr; } }
-
-    .dmode {
-      border-radius: 1.25rem;
+    @media(max-width:560px){ .cycle-wrap { grid-template-columns: 1fr; } }
+    .cycle-step {
+      border-radius: 1.2rem;
       padding: 1.5rem;
-      border: 2px solid var(--border);
-      background: #fff;
+      position: relative;
     }
-
-    .dmode.pilot {
-      border-color: var(--green);
-      background: #f0fdf4;
+    .cycle-1 { background: #f0fdf4; border: 2px solid #86efac; }
+    .cycle-2 { background: #eff6ff; border: 2px solid #93c5fd; }
+    .cycle-3 { background: var(--purple-light); border: 2px solid #c4b5fd; }
+    .cycle-4 { background: #fefce8; border: 2px solid #fde68a; }
+    .cycle-num {
+      width: 2rem; height: 2rem;
+      border-radius: 999px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: .85rem; font-weight: 800; color: #fff;
+      margin-bottom: .8rem;
     }
+    .cycle-1 .cycle-num { background: var(--green); }
+    .cycle-2 .cycle-num { background: var(--brand-dark); }
+    .cycle-3 .cycle-num { background: var(--purple); }
+    .cycle-4 .cycle-num { background: var(--amber); }
+    .cycle-step h3 { font-size: .97rem; font-weight: 800; color: var(--dark); margin-bottom: .4rem; }
+    .cycle-step p  { font-size: .84rem; color: var(--muted); line-height: 1.6; }
+    .cycle-step .cycle-badge {
+      display: inline-block; margin-top: .7rem;
+      font-size: .72rem; font-weight: 700; padding: .2rem .7rem; border-radius: 999px;
+    }
+    .cycle-1 .cycle-badge { background: #bbf7d0; color: #065f46; }
+    .cycle-2 .cycle-badge { background: #bfdbfe; color: #1e40af; }
+    .cycle-3 .cycle-badge { background: #ddd6fe; color: #5b21b6; }
+    .cycle-4 .cycle-badge { background: #fde68a; color: #92400e; }
+    .cycle-center {
+      grid-column: 1 / -1;
+      background: var(--dark); border-radius: 1.2rem;
+      padding: 1.4rem; text-align: center; color: #6ee7b7;
+      font-size: 1rem; font-weight: 700; line-height: 1.6;
+    }
+    .cycle-center em { font-style: normal; color: #a7f3d0; font-size: 1.1rem; }
 
+    /* ── DONATION MODES ── */
+    .donation-modes {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 1rem; margin-top: 1.5rem;
+    }
+    @media(max-width:540px){ .donation-modes { grid-template-columns: 1fr; } }
+    .dmode {
+      border-radius: 1.25rem; padding: 1.5rem;
+      border: 2px solid var(--border); background: #fff;
+    }
+    .dmode.pilot { border-color: var(--green); background: #f0fdf4; }
     .dmode-icon  { font-size: 2rem; margin-bottom: .65rem; }
     .dmode-title { font-size: .95rem; font-weight: 800; color: var(--dark); margin-bottom: .4rem; }
     .dmode-desc  { font-size: .84rem; color: var(--muted); line-height: 1.6; }
-
     .dmode-badge {
-      display: inline-block;
-      margin-top: .7rem;
-      font-size: .72rem;
-      font-weight: 700;
-      padding: .2rem .7rem;
-      border-radius: 999px;
+      display: inline-block; margin-top: .7rem;
+      font-size: .72rem; font-weight: 700; padding: .2rem .7rem; border-radius: 999px;
     }
-
     .dmode.pilot .dmode-badge { background: #bbf7d0; color: var(--green-dark); }
     .dmode:not(.pilot) .dmode-badge { background: #e0f2fe; color: #0c4a6e; }
 
+    /* ── IMPACTO PROYECTADO (F) ── */
+    .impact-calc {
+      background: var(--dark); border-radius: 1.5rem;
+      padding: 2.2rem 2rem; color: #fff; margin-top: 1.5rem;
+    }
+    .ic-title {
+      font-size: .75rem; font-weight: 700; letter-spacing: .09em;
+      text-transform: uppercase; color: rgba(255,255,255,.4); margin-bottom: 1.5rem;
+    }
+    .ic-slider-wrap {
+      margin-bottom: 1.8rem;
+    }
+    .ic-slider-label { font-size: .85rem; font-weight: 700; color: rgba(255,255,255,.7); margin-bottom: .6rem; display: flex; justify-content: space-between; }
+    .ic-slider-label span { color: #6ee7b7; font-size: 1.1rem; }
+    .ic-slider-wrap input[type=range] { width: 100%; accent-color: var(--green); cursor: pointer; }
+    .ic-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(160px,1fr)); gap: 1rem;
+    }
+    .ic-item {
+      background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.1);
+      border-radius: 1rem; padding: 1.2rem; text-align: center;
+    }
+    .ic-icon { font-size: 1.8rem; margin-bottom: .5rem; }
+    .ic-val  { font-size: 1.8rem; font-weight: 800; line-height: 1; margin-bottom: .3rem; }
+    .ic-lbl  { font-size: .72rem; color: rgba(255,255,255,.4); line-height: 1.4; }
+    .ic-note {
+      margin-top: 1.2rem;
+      font-size: .78rem; color: rgba(255,255,255,.3); line-height: 1.55; text-align: center;
+    }
+
     /* ── JOURNEY ── */
     .journey {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px,1fr));
-      gap: 1rem;
-      margin-top: 1.5rem;
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr));
+      gap: 1rem; margin-top: 1.5rem;
     }
-
-    .jstep {
-      border-radius: 1.25rem;
-      padding: 1.6rem 1.4rem;
-    }
-
+    .jstep { border-radius: 1.25rem; padding: 1.6rem 1.4rem; }
     .jstep-1 { background: #fefce8; border: 2px solid #fde68a; }
     .jstep-2 { background: #f0fdf4; border: 2px solid #86efac; }
     .jstep-3 { background: #eff6ff; border: 2px solid #93c5fd; }
-
     .jnum {
-      width: 2.2rem; height: 2.2rem;
-      border-radius: 999px;
+      width: 2.2rem; height: 2.2rem; border-radius: 999px;
       display: flex; align-items: center; justify-content: center;
-      font-size: .9rem; font-weight: 800; color: #fff;
-      margin-bottom: .9rem;
+      font-size: .9rem; font-weight: 800; color: #fff; margin-bottom: .9rem;
     }
-
     .jstep-1 .jnum { background: #d97706; }
     .jstep-2 .jnum { background: var(--green); }
     .jstep-3 .jnum { background: var(--brand-dark); }
-
     .jtitle { font-size: 1rem; font-weight: 800; color: var(--dark); margin-bottom: .45rem; }
     .jbody  { font-size: .85rem; color: var(--muted); line-height: 1.6; }
-
     .jbadge {
-      display: inline-block;
-      margin-top: .8rem;
-      font-size: .76rem;
-      font-weight: 800;
-      padding: .28rem .8rem;
-      border-radius: 999px;
+      display: inline-block; margin-top: .8rem;
+      font-size: .76rem; font-weight: 800; padding: .28rem .8rem; border-radius: 999px;
     }
-
     .jstep-1 .jbadge { background: #fde68a; color: #92400e; }
     .jstep-2 .jbadge { background: #bbf7d0; color: #065f46; }
     .jstep-3 .jbadge { background: #bfdbfe; color: #1e40af; }
 
     /* ── PILOT BOX ── */
     .pilot-box {
-      background: var(--amber-light);
-      border: 2px solid #fcd34d;
-      border-radius: 1.25rem;
-      padding: 1.8rem 1.6rem;
-      margin-top: 1.2rem;
+      background: var(--amber-light); border: 2px solid #fcd34d;
+      border-radius: 1.25rem; padding: 1.8rem 1.6rem; margin-top: 1.2rem;
     }
-
     .pilot-box-title {
-      font-size: .78rem;
-      font-weight: 800;
-      letter-spacing: .06em;
-      text-transform: uppercase;
-      color: #92400e;
-      margin-bottom: 1.1rem;
+      font-size: .78rem; font-weight: 800; letter-spacing: .06em;
+      text-transform: uppercase; color: #92400e; margin-bottom: 1.1rem;
     }
-
     .pilot-stats {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(140px,1fr));
-      gap: 1rem;
-      text-align: center;
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(140px,1fr));
+      gap: 1rem; text-align: center;
     }
-
     .ps-val   { font-size: 1.8rem; font-weight: 800; color: #92400e; line-height: 1; }
     .ps-label { font-size: .76rem; color: #a16207; margin-top: .3rem; line-height: 1.35; }
 
     /* ── CLOSE BOX ── */
     .close-box {
       background: linear-gradient(135deg, #064e3b, #065f46 55%, #0e7490);
-      border-radius: 1.75rem;
-      padding: 3rem 2rem;
-      color: #fff;
-      text-align: center;
-      margin-top: 3.5rem;
+      border-radius: 1.75rem; padding: 3rem 2rem;
+      color: #fff; text-align: center; margin-top: 3.5rem;
     }
-
-    .close-box h2 {
-      color: #fff;
-      font-size: clamp(1.6rem, 4vw, 2.4rem);
-      margin-bottom: .7rem;
-    }
-
+    .close-box h2 { color: #fff; font-size: clamp(1.6rem, 4vw, 2.4rem); margin-bottom: .7rem; }
     .close-box h2 em { color: #6ee7b7; }
-
     .close-box p {
-      color: rgba(255,255,255,.72);
-      font-size: .97rem;
-      line-height: 1.7;
-      max-width: 580px;
-      margin: 0 auto 2rem;
+      color: rgba(255,255,255,.72); font-size: .97rem; line-height: 1.7;
+      max-width: 580px; margin: 0 auto 2rem;
     }
-
     .close-stats {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(130px,1fr));
-      gap: 1rem;
-      margin-bottom: 2.5rem;
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(130px,1fr));
+      gap: 1rem; margin-bottom: 2.5rem;
     }
-
     .cs {
-      background: rgba(255,255,255,.1);
-      border: 1px solid rgba(255,255,255,.15);
-      border-radius: 1rem;
-      padding: 1.1rem;
+      background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.15);
+      border-radius: 1rem; padding: 1.1rem;
     }
-
     .cs-val   { font-size: 1.7rem; font-weight: 800; color: #6ee7b7; line-height: 1; }
     .cs-label { font-size: .75rem; color: rgba(255,255,255,.5); margin-top: .3rem; line-height: 1.35; }
-
     .btn-row { display: flex; gap: .75rem; justify-content: center; flex-wrap: wrap; }
-
     .btn {
       display: inline-flex; align-items: center; gap: .4rem;
-      padding: .8rem 1.8rem;
-      border-radius: 999px;
-      font-weight: 700; font-size: .97rem;
-      text-decoration: none;
+      padding: .8rem 1.8rem; border-radius: 999px;
+      font-weight: 700; font-size: .97rem; text-decoration: none;
       transition: transform .15s;
     }
     .btn:hover { transform: translateY(-2px); }
+    .btn-green { background: var(--green); color: #fff; box-shadow: 0 4px 16px rgba(16,185,129,.4); }
+    .btn-outline { background: rgba(255,255,255,.1); color: #fff; border: 2px solid rgba(255,255,255,.3); }
 
-    .btn-green {
-      background: var(--green);
-      color: #fff;
-      box-shadow: 0 4px 16px rgba(16,185,129,.4);
-    }
-
-    .btn-outline {
-      background: rgba(255,255,255,.1);
-      color: #fff;
-      border: 2px solid rgba(255,255,255,.3);
-    }
+    /* ── CALCULATOR STYLES ── */
+    .ci { display:flex; flex-direction:column; gap:.5rem; }
+    .ci-label { font-size:.8rem; font-weight:700; color:var(--slate); }
+    .ci-row { display:flex; align-items:center; gap:.8rem; }
+    .ci-row input[type=range] { flex:1; accent-color:var(--green); cursor:pointer; }
+    .ci-val { font-size:1rem; font-weight:800; color:var(--green-dark); min-width:70px; text-align:right; }
+    .cr { display:flex; justify-content:space-between; font-size:.84rem; padding:.32rem 0; border-bottom:1px dashed var(--border); }
+    .cr:last-of-type { border-bottom:none; }
+    .cl { color:var(--muted); }
+    .cv { font-weight:700; }
+    .cv.red { color:var(--red); }
+    .cv.grn { color:var(--green-dark); }
 
     @media(max-width:500px) {
       .stat-bar { grid-template-columns: 1fr 1fr; }
@@ -586,39 +615,138 @@
 <!-- ████ HEADER ████ -->
 <header>
   <div class="header-tag">Propuesta piloto · Exclusivo para primeras organizaciones</div>
-  <h1>Tus ferias de castración<br/>merecen <em>llenarse siempre.</em></h1>
+  <h1>Cada castración salva<br/><em>más vidas de las que imaginás.</em></h1>
   <p class="subtitle">
-    Hoy perdés cupos, ingresos y tiempo por falta de herramientas. CastraCR cambia eso —
-    y las primeras 3 ferias son completamente gratis para que lo comprobés con tus propios números.
+    Costa Rica tiene más de 1.5 millones de animales en las calles. CastraCR conecta organizaciones,
+    refugios y casas cunas con los recursos para hacer más ferias — y cambiar ese número para siempre.
   </p>
 </header>
 
 <!-- ████ STAT BAR ████ -->
 <div class="stat-bar">
   <div class="stat-cell">
-    <div class="stat-val">+82%</div>
-    <div class="stat-label">más mascotas<br/>atendidas por feria</div>
+    <div class="stat-val">1.5M</div>
+    <div class="stat-label">animales callejeros<br/>estimados en CR</div>
   </div>
   <div class="stat-cell">
-    <div class="stat-val">+₡472k</div>
-    <div class="stat-label">más por feria aun<br/>pagando el 10%</div>
+    <div class="stat-val">20,000</div>
+    <div class="stat-label">descendientes de 1 gata<br/>sin castrar en 5 años</div>
   </div>
   <div class="stat-cell">
     <div class="stat-val">100%</div>
-    <div class="stat-label">de las donaciones<br/>son para tu org</div>
+    <div class="stat-label">de donaciones y<br/>cuotas van a las orgs</div>
   </div>
   <div class="stat-cell">
     <div class="stat-val">3</div>
-    <div class="stat-label">ferias gratis<br/>sin compromiso</div>
+    <div class="stat-label">ferias gratis<br/>para empezar</div>
   </div>
 </div>
 
 <div class="page">
 
-  <!-- ══ BLOQUE 1: EL PROBLEMA ══ -->
+  <!-- ══ BLOQUE A: SOBREPOBLACIÓN ══ -->
   <div class="block">
-    <span class="section-tag tag-slate">La realidad hoy</span>
-    <h2>El problema no es la demanda.<br/>Es cómo llegás a ella.</h2>
+    <span class="section-tag tag-red">El problema de fondo</span>
+    <h2>No es falta de amor.<br/>Es falta de <em>acceso.</em></h2>
+    <p class="lead">
+      La sobrepoblación animal en Costa Rica no ocurre porque a la gente no le importen sus mascotas.
+      Ocurre porque castrar sigue siendo caro, difícil de coordinar y difícil de encontrar.
+      Cada animal sin castrar multiplica el problema exponencialmente.
+    </p>
+
+    <div class="overpop-grid">
+      <div class="overpop-card">
+        <div class="ov-icon">🐕</div>
+        <div class="ov-val">800k+</div>
+        <div class="ov-lbl">perros sin hogar<br/>estimados en CR</div>
+      </div>
+      <div class="overpop-card">
+        <div class="ov-icon">🐈</div>
+        <div class="ov-val">700k+</div>
+        <div class="ov-lbl">gatos sin hogar<br/>estimados en CR</div>
+      </div>
+      <div class="overpop-card">
+        <div class="ov-icon">🏠</div>
+        <div class="ov-val">₡18k</div>
+        <div class="ov-lbl">costo promedio mensual<br/>mantener 1 animal en refugio</div>
+      </div>
+      <div class="overpop-card">
+        <div class="ov-icon">📉</div>
+        <div class="ov-val">&lt;15%</div>
+        <div class="ov-lbl">de animales en refugios<br/>son adoptados cada año</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ BLOQUE B: CADA CASTRACIÓN CUENTA ══ -->
+  <hr class="div"/>
+  <div class="block">
+    <span class="section-tag tag-red">Por qué cada castración importa tanto</span>
+    <h2>Una gata sin castrar no es<br/><em>un problema. Es una cadena.</em></h2>
+    <p class="lead">
+      Una sola gata puede tener 2–3 camadas al año con 4–6 crías cada una.
+      Sus hijas hacen lo mismo. Y las hijas de sus hijas también.
+      La matemática de la sobrepoblación animal es brutal.
+    </p>
+
+    <div class="chain-box">
+      <div class="chain-title">🐈 La cadena de reproducción de 1 gata sin castrar</div>
+
+      <div class="chain-steps">
+        <div class="chain-step">
+          <div class="cs-icon">🐈</div>
+          <div class="cs-num">1</div>
+          <div class="cs-lbl">Hoy<br/>sin castrar</div>
+        </div>
+        <div class="chain-arrow">→</div>
+        <div class="chain-step">
+          <div class="cs-icon">🐱</div>
+          <div class="cs-num">~12</div>
+          <div class="cs-lbl">crías en<br/>1 año</div>
+        </div>
+        <div class="chain-arrow">→</div>
+        <div class="chain-step">
+          <div class="cs-icon">🐱🐱</div>
+          <div class="cs-num">~66</div>
+          <div class="cs-lbl">descendientes<br/>en 2 años</div>
+        </div>
+        <div class="chain-arrow">→</div>
+        <div class="chain-step">
+          <div class="cs-icon">🐾</div>
+          <div class="cs-num">~382</div>
+          <div class="cs-lbl">descendientes<br/>en 3 años</div>
+        </div>
+        <div class="chain-arrow">→</div>
+        <div class="chain-step">
+          <div class="cs-icon">😰</div>
+          <div class="cs-num">~20,000</div>
+          <div class="cs-lbl">descendientes<br/>en 5 años</div>
+        </div>
+      </div>
+
+      <div class="chain-conclusion">
+        <div class="cc-text">
+          En 5 años, <strong style="color:#fca5a5;">1 sola gata sin castrar</strong> puede dar origen a hasta
+          <strong style="color:#fca5a5;">20,000 animales</strong> — la mayoría terminando en las calles o en refugios
+          que no tienen capacidad para recibirlos todos.
+        </div>
+        <div class="cc-val">×20,000</div>
+      </div>
+
+      <div class="chain-vs">
+        <strong>Una feria de 40 cupos castra 40 animales.</strong>
+        Con una tasa de reproducción conservadora, esas 40 castraciones evitan que
+        <strong>más de 800,000 animales</strong> nazcan en condiciones de calle o abandono en los próximos 5 años.
+        Eso no es una feria. Es una intervención masiva de bienestar animal.
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ BLOQUE: PROBLEMAS OPERATIVOS ══ -->
+  <hr class="div"/>
+  <div class="block">
+    <span class="section-tag tag-slate">Por qué no alcanza con la voluntad</span>
+    <h2>Las organizaciones quieren hacer más.<br/>El sistema no se los permite.</h2>
     <p class="lead">
       Hay cientos de dueños de mascotas a 5 km de tu próxima feria que nunca se van a enterar de que existe.
       Y los que se registran por WhatsApp, muchos no aparecen. Eso se puede resolver.
@@ -628,12 +756,12 @@
       <div class="problem-card">
         <div class="icon">📣</div>
         <h3>Alcance limitado</h3>
-        <p>Publicás en Facebook e Instagram y llegás a quien ya te sigue. La mayoría de los dueños de mascotas en tu zona nunca se entera de la feria.</p>
+        <p>Publicás en Facebook e Instagram y llegás a quien ya te sigue. La mayoría de los dueños en tu zona nunca se entera de la feria.</p>
       </div>
       <div class="problem-card">
         <div class="icon">📱</div>
         <h3>Caos por WhatsApp</h3>
-        <p>Los registros llegan a distintas horas, en diferentes formatos, y hay que organizar todo a mano. Horas de trabajo que podrían dedicarse a los animales.</p>
+        <p>Los registros llegan a distintas horas, en diferentes formatos, y hay que organizar todo a mano. Horas que podrían dedicarse a los animales.</p>
       </div>
       <div class="problem-card">
         <div class="icon">🚫</div>
@@ -642,157 +770,142 @@
       </div>
       <div class="problem-card">
         <div class="icon">💸</div>
-        <h3>Cero donaciones</h3>
-        <p>No hay canal para recibir apoyo de la comunidad. Alguien que quiera colaborar con ₡1,000 no tiene cómo hacerlo hoy.</p>
+        <h3>Cero canal de donaciones</h3>
+        <p>Alguien que quiere apoyar al refugio con ₡1,000 hoy no tiene cómo hacerlo en el momento de mayor intención — cuando registra a su mascota.</p>
       </div>
     </div>
   </div>
 
-  <!-- ══ BLOQUE 2: BENEFICIOS DETALLADOS ══ -->
+  <!-- ══ BLOQUE: BENEFICIOS ══ -->
   <hr class="div"/>
   <div class="block">
     <span class="section-tag tag-green">Lo que cambia con CastraCR</span>
     <h2>Cada problema tiene<br/><em>una solución concreta.</em></h2>
     <p class="lead">
-      No es solo una app. Es un sistema completo que trabaja por tu organización antes, durante y después de cada feria.
+      No es solo una app. Es un sistema completo que trabaja por los animales antes, durante y después de cada feria.
     </p>
 
     <div class="benefit-grid">
-
       <div class="benefit-card">
         <div class="icon">🗺️</div>
         <h3>Tu feria aparece en el mapa de todos</h3>
-        <p>La plataforma detecta la ubicación de cada dueño de mascota y muestra tu feria automáticamente si está en un radio de 5 km. Sin publicidad pagada, sin esfuerzo extra de tu parte.</p>
+        <p>La plataforma detecta la ubicación del dueño y muestra tu feria si está en radio de 5 km. Sin publicidad pagada, sin esfuerzo extra.</p>
         <span class="highlight">Marketing geolocalizado gratis</span>
       </div>
-
       <div class="benefit-card">
         <div class="icon">🤖</div>
-        <h3>Bot de WhatsApp que registra 24/7</h3>
-        <p>Un asistente de inteligencia artificial atiende los registros por WhatsApp a cualquier hora. El dueño escribe el nombre, la especie y el peso del animal — el sistema hace el resto solo.</p>
+        <h3>Bot de WhatsApp 24/7</h3>
+        <p>Un asistente de IA atiende registros a cualquier hora. El dueño escribe nombre, especie y peso — el sistema hace el resto solo.</p>
         <span class="highlight">Cero mensajes manuales para vos</span>
       </div>
-
       <div class="benefit-card">
         <div class="icon">💳</div>
         <h3>Pago anticipado = cupo reservado</h3>
-        <p>El dueño paga cuando se registra. Quien paga, aparece. Los no-shows caen de ~20% a menos del 5% porque hay un compromiso económico real de por medio.</p>
+        <p>Quien paga, aparece. Los no-shows caen de ~20% a menos del 5% porque hay un compromiso económico real de por medio.</p>
         <span class="highlight">De 22 a 40 mascotas por feria</span>
       </div>
-
       <div class="benefit-card">
         <div class="icon">⏳</div>
         <h3>Lista de espera automática</h3>
-        <p>Cuando los 40 cupos se llenan, el sistema sigue aceptando registros en lista de espera. Si alguien cancela, el primero de la lista recibe notificación automática y puede pagar. Sin coordinación de tu parte.</p>
+        <p>Cuando los cupos se llenan, el sistema sigue aceptando registros en espera. Si alguien cancela, el siguiente recibe notificación automática.</p>
         <span class="highlight">Cupos siempre ocupados</span>
       </div>
-
       <div class="benefit-card">
         <div class="icon">🔔</div>
-        <h3>Recordatorios automáticos antes de la feria</h3>
-        <p>El sistema manda emails automáticos 24 horas y 2 horas antes del evento. Los dueños no se olvidan, llegan puntuales y la feria fluye mejor para todos — incluyendo los veterinarios.</p>
+        <h3>Recordatorios automáticos</h3>
+        <p>Emails automáticos 24h y 2h antes del evento. Los dueños no se olvidan, llegan puntuales y la feria fluye mejor para todos.</p>
         <span class="highlight">Menos caos el día del evento</span>
       </div>
-
       <div class="benefit-card">
         <div class="icon">📱</div>
-        <h3>Check-in con código QR en segundos</h3>
-        <p>El día de la feria, cada mascota tiene un código QR único. El veterinario lo escanea y listo — sin listas en papel, sin buscar nombres, sin colas. El registro queda en la plataforma automáticamente.</p>
+        <h3>Check-in QR en 3 segundos</h3>
+        <p>Cada mascota tiene un QR único. El veterinario lo escanea y listo — sin listas en papel, sin buscar nombres, sin colas.</p>
         <span class="highlight">Check-in en menos de 3 segundos</span>
       </div>
-
       <div class="benefit-card">
         <div class="icon">📊</div>
-        <h3>Dashboard con todo en tiempo real</h3>
-        <p>Desde tu panel podés ver cuántos cupos están reservados, cuánto dinero se ha recaudado, quiénes ya pagaron y el historial completo de ferias anteriores. Transparencia total en todo momento.</p>
+        <h3>Dashboard en tiempo real</h3>
+        <p>Cupos reservados, dinero recaudado, quiénes pagaron y el historial completo. Transparencia total sin hojas de cálculo.</p>
         <span class="highlight">Control total sin hojas de cálculo</span>
       </div>
-
       <div class="benefit-card">
         <div class="icon">💰</div>
-        <h3>Canal de donaciones que antes no existía</h3>
-        <p>Al registrar su mascota, el sistema pregunta al dueño si quiere hacer una donación adicional a la causa. Es una pregunta simple, natural, y el 100% de lo que donen llega a tu organización.</p>
+        <h3>Canal de donaciones integrado</h3>
+        <p>Al registrar su mascota, el sistema pregunta si quieren donar. Es el momento de mayor intención — y el 100% va a tu organización.</p>
         <span class="highlight">Ingresos nuevos por feria</span>
       </div>
-
     </div>
   </div>
 
-  <!-- ══ BLOQUE 3: ANTES VS DESPUÉS ══ -->
+  <!-- ══ BLOQUE: ANTES VS DESPUÉS ══ -->
   <hr class="div"/>
   <div class="block">
     <span class="section-tag tag-slate">Los números reales</span>
     <h2>La misma feria. La misma capacidad.<br/><em>Resultados completamente distintos.</em></h2>
     <p class="lead">
-      Tomamos el escenario más común en Costa Rica: 1 feria al mes, 40 cupos disponibles, precio por peso con un promedio de ₡32,000 por mascota.
+      Escenario típico en Costa Rica: 1 feria al mes, 40 cupos disponibles, precio por peso con un promedio de ₡32,000 por mascota.
     </p>
 
     <div class="compare">
-
       <div class="before">
         <div class="compare-title">⚠️ Hoy, sin plataforma</div>
-        <div class="crow"><span class="lbl">Cupos disponibles</span><span class="v">40</span></div>
-        <div class="crow"><span class="lbl">Cupos que se reservan</span><span class="v">28 de 40</span></div>
-        <div class="crow"><span class="lbl">No-shows el día del evento</span><span class="v">6 personas (~20%)</span></div>
+        <div class="crow"><span class="lbl">Cupos que se llenan</span><span class="v">28 de 40</span></div>
+        <div class="crow"><span class="lbl">No-shows el día</span><span class="v">6 (~20%)</span></div>
         <div class="crow"><span class="lbl">Mascotas atendidas</span><span class="v">22 de 40</span></div>
-        <div class="crow"><span class="lbl">Precio promedio</span><span class="v">₡32,000</span></div>
-        <div class="crow"><span class="lbl">Donaciones recibidas</span><span class="v">₡0</span></div>
-        <div class="crow"><span class="lbl">Horas de coordinación manual</span><span class="v">~8–12 hrs</span></div>
+        <div class="crow"><span class="lbl">Donaciones</span><span class="v">₡0</span></div>
+        <div class="crow"><span class="lbl">Animales evitados</span><span class="v">~440,000 en 5 años</span></div>
+        <div class="crow"><span class="lbl">Coordinación manual</span><span class="v">~8–12 hrs</span></div>
         <div class="ctotal">
-          <span class="ctotal-lbl">Recaudado total</span>
+          <span class="ctotal-lbl">Recaudado</span>
           <span class="ctotal-v">₡704,000</span>
         </div>
       </div>
-
       <div class="after">
         <div class="after-badge">Con CastraCR</div>
         <div class="compare-title">✅ Con la plataforma</div>
-        <div class="crow"><span class="lbl">Cupos disponibles</span><span class="v">40</span></div>
-        <div class="crow"><span class="lbl">Cupos que se reservan</span><span class="v">40 de 40 + lista espera</span></div>
-        <div class="crow"><span class="lbl">No-shows el día del evento</span><span class="v">2 personas (~5%)</span></div>
+        <div class="crow"><span class="lbl">Cupos que se llenan</span><span class="v">40 de 40 + espera</span></div>
+        <div class="crow"><span class="lbl">No-shows el día</span><span class="v">2 (~5%)</span></div>
         <div class="crow"><span class="lbl">Mascotas atendidas</span><span class="v">40 de 40 ✓</span></div>
-        <div class="crow"><span class="lbl">Precio promedio</span><span class="v">₡32,000</span></div>
-        <div class="crow"><span class="lbl">Donaciones recibidas</span><span class="v">~₡24,000 (100% tuyas)</span></div>
-        <div class="crow"><span class="lbl">Horas de coordinación manual</span><span class="v">~1 hr (solo el día)</span></div>
+        <div class="crow"><span class="lbl">Donaciones</span><span class="v">~₡24,000 (100% tuyas)</span></div>
+        <div class="crow"><span class="lbl">Animales evitados</span><span class="v">~800,000 en 5 años</span></div>
+        <div class="crow"><span class="lbl">Coordinación manual</span><span class="v">~1 hr (solo el día)</span></div>
         <div class="ctotal">
-          <span class="ctotal-lbl">Recaudado total</span>
+          <span class="ctotal-lbl">Recaudado</span>
           <span class="ctotal-v">₡1,200,000</span>
         </div>
       </div>
-
     </div>
 
     <div class="delta">
       <div>
-        <div class="delta-text">Ingrés más por feria — aún después de pagar el 10%</div>
+        <div class="delta-text">Ingrés más por feria — aún después del 10% de comisión de la plataforma</div>
         <div class="delta-sub">₡1,176,000 neto con plataforma vs ₡704,000 hoy = diferencia real</div>
       </div>
       <div class="delta-val">+₡472,000</div>
     </div>
   </div>
 
-  <!-- ══ BLOQUE 4: CÓMO SE DIVIDE EL DINERO ══ -->
+  <!-- ══ BLOQUE: CÓMO SE DIVIDE EL DINERO ══ -->
   <hr class="div"/>
   <div class="block">
     <span class="section-tag tag-blue">Cómo funciona el cobro</span>
     <h2>Sin mensualidades.<br/>Solo pagás cuando cobrás.</h2>
     <p class="lead">
-      La plataforma no cobra ningún fee fijo mensual. El 10% aplica únicamente sobre los pagos que se procesan a través de la app. Si el dueño paga efectivo en el evento, ese dinero es 100% tuyo, siempre.
+      La plataforma no cobra ningún fee fijo mensual. El 10% aplica únicamente sobre los pagos procesados por la app.
+      Si el dueño paga efectivo en el evento, ese dinero es 100% tuyo, siempre.
     </p>
 
     <div class="money-dark">
       <div class="money-title">División de cada pago procesado — 1 feria, 40 mascotas</div>
-
       <div class="split-bar">
         <div class="sb-org">Tu organización 90%</div>
         <div class="sb-plat">Plat. 10%</div>
       </div>
-
       <div class="money-grid">
         <div class="mg-item">
-          <div class="mg-label">Total recaudado en la feria</div>
+          <div class="mg-label">Total recaudado</div>
           <div class="mg-val">₡1,280,000</div>
-          <div class="mg-sub">40 mascotas × ₡32,000 promedio</div>
+          <div class="mg-sub">40 mascotas × ₡32,000</div>
         </div>
         <div class="mg-item">
           <div class="mg-label">Para tu organización (90%)</div>
@@ -800,58 +913,167 @@
           <div class="mg-sub">Transferido post-feria</div>
         </div>
         <div class="mg-item">
-          <div class="mg-label">Para CastraCR (10%)</div>
+          <div class="mg-label">Para la plataforma (10%)</div>
           <div class="mg-val" style="color:#7dd3fc;">₡128,000</div>
-          <div class="mg-sub">Cubre infra + desarrollo</div>
+          <div class="mg-sub">Sostiene la herramienta</div>
         </div>
         <div class="mg-item">
           <div class="mg-label">Donaciones (100% tuyas)</div>
           <div class="mg-val" style="color:#6ee7b7;">+₡24,000</div>
-          <div class="mg-sub">~12 donantes × ₡2,000 promedio</div>
+          <div class="mg-sub">~12 donantes × ₡2,000</div>
         </div>
       </div>
-
-      <!-- INFRA COST TRANSPARENCY -->
-      <div class="infra-box">
-        <div class="infra-title">🔍 ¿A qué va el 10% de la plataforma?</div>
-        <div class="infra-rows">
-          <div class="infra-row">
-            <span class="name">Servidores AWS (Lambda, Base de datos, CDN, Email)</span>
-            <span class="cost">~₡257</span>
-          </div>
-          <div class="infra-row">
-            <span class="name">Bot de WhatsApp — Twilio (40 conversaciones)</span>
-            <span class="cost">~₡206</span>
-          </div>
-          <div class="infra-row">
-            <span class="name">Procesamiento de pagos — OnvoPay</span>
-            <span class="cost">~₡310</span>
-          </div>
-          <div class="infra-total">
-            <span class="name">Total costo técnico por feria</span>
-            <span class="cost">~₡773 (~$1.50)</span>
-          </div>
-        </div>
-        <div class="infra-conclusion">
-          El costo técnico real para operar una feria completa es <strong>menos de ₡800</strong> —
-          el equivalente a una taza de café. El resto del 10% (₡127,227) financia el desarrollo continuo de la plataforma,
-          nuevas funcionalidades, soporte y la operación que beneficia a todas las organizaciones.
-          Eso significa que <strong>cada colón que pagás en comisión se reinvierte en mejorar la herramienta</strong>
-          que usás para hacer más ferias.
-        </div>
+      <div class="platform-note">
+        El 10% que va a la plataforma cubre los costos de infraestructura AWS, el bot de WhatsApp con IA
+        y el procesamiento de pagos — el costo técnico real es menos de ₡800 por feria.
+        <strong>El resto sostiene el desarrollo continuo que beneficia a todas las organizaciones participantes.</strong>
+        Sin esa base, no hay herramienta. Con ella, cada org hace más ferias, atiende más animales y recauda más.
       </div>
     </div>
   </div>
 
-  <!-- ══ BLOQUE 5: DONACIONES ══ -->
+  <!-- ══ BLOQUE C: REFUGIOS Y CASAS CUNAS ══ -->
   <hr class="div"/>
   <div class="block">
-    <span class="section-tag tag-green">Las donaciones son 100% tuyas</span>
+    <span class="section-tag tag-purple">Para refugios y casas cunas</span>
+    <h2>No necesitás organizar una feria<br/><em>para recibir ingresos.</em></h2>
+    <p class="lead">
+      Los refugios y casas cunas son los que más sienten la sobrepoblación — y los que menos recursos tienen.
+      CastraCR tiene dos formas de generar ingresos para ellos: activa y pasiva.
+      Incluso una organización que nunca organiza una feria puede recibir donaciones recurrentes a través de la plataforma.
+    </p>
+
+    <div class="refugio-hero">
+      <div class="refugio-title">💜 Dos formas de generar ingresos para tu refugio</div>
+
+      <div class="refugio-modes">
+        <div class="rmode">
+          <div class="rmode-icon">🏥</div>
+          <div class="rmode-title">Activo — Organizás ferias</div>
+          <div class="rmode-desc">
+            Creás la campaña en la plataforma, el sistema llena tus cupos automáticamente,
+            y recibís el 90% de cada castración más el 100% de las donaciones.
+            El bot de WhatsApp trabaja por vos 24/7.
+          </div>
+          <div class="rmode-badge">90% de castraciones + 100% donaciones</div>
+        </div>
+        <div class="rmode">
+          <div class="rmode-icon">🤝</div>
+          <div class="rmode-title">Pasivo — Sos beneficiario</div>
+          <div class="rmode-desc">
+            Otro organizador crea una feria y te incluye como destino de donaciones.
+            Cada dueño que se registra ve tu refugio y puede donarte.
+            No coordinás nada — solo recibís.
+          </div>
+          <div class="rmode-badge">Ingresos sin organizar nada</div>
+        </div>
+      </div>
+
+      <div class="refugio-title" style="margin-top:1.5rem;">📊 Escenarios reales de ingreso mensual</div>
+      <div class="refugio-scenarios">
+        <div class="rscen">
+          <div class="rscen-label">Refugio pequeño</div>
+          <div class="rscen-name">🏠 Casa cuna local</div>
+          <div class="rscen-row"><span class="rr-l">Rol en la plataforma</span><span class="rr-v">Solo beneficiario</span></div>
+          <div class="rscen-row"><span class="rr-l">Ferias donde aparece</span><span class="rr-v">3 por mes</span></div>
+          <div class="rscen-row"><span class="rr-l">Donantes promedio/feria</span><span class="rr-v">~15 personas</span></div>
+          <div class="rscen-row"><span class="rr-l">Donación promedio</span><span class="rr-v">₡2,000</span></div>
+          <div class="rscen-row"><span class="rr-l">Costo operativo para el refugio</span><span class="rr-v">₡0</span></div>
+          <div class="rscen-total">
+            <span class="rt-l">Ingreso mensual</span>
+            <span class="rt-v">₡90,000</span>
+          </div>
+        </div>
+        <div class="rscen">
+          <div class="rscen-label">Organización activa</div>
+          <div class="rscen-name">🏥 Org. rescatista mediana</div>
+          <div class="rscen-row"><span class="rr-l">Ferias que organiza</span><span class="rr-v">1 por mes (40 cupos)</span></div>
+          <div class="rscen-row"><span class="rr-l">Ingresos por castraciones (90%)</span><span class="rr-v">₡1,152,000</span></div>
+          <div class="rscen-row"><span class="rr-l">Donaciones de su feria</span><span class="rr-v">₡24,000</span></div>
+          <div class="rscen-row"><span class="rr-l">Donaciones pasivas (otras ferias)</span><span class="rr-v">₡60,000</span></div>
+          <div class="rscen-row"><span class="rr-l">Costo fijo mensual plataforma</span><span class="rr-v">₡0</span></div>
+          <div class="rscen-total">
+            <span class="rt-l">Ingreso mensual total</span>
+            <span class="rt-v">₡1,236,000</span>
+          </div>
+        </div>
+        <div class="rscen">
+          <div class="rscen-label">Organización líder</div>
+          <div class="rscen-name">⭐ Org. con red de aliados</div>
+          <div class="rscen-row"><span class="rr-l">Ferias que organiza</span><span class="rr-v">2 por mes (80 cupos)</span></div>
+          <div class="rscen-row"><span class="rr-l">Ingresos por castraciones (90%)</span><span class="rr-v">₡2,304,000</span></div>
+          <div class="rscen-row"><span class="rr-l">Donaciones de sus ferias</span><span class="rr-v">₡48,000</span></div>
+          <div class="rscen-row"><span class="rr-l">Donaciones pasivas (red aliada)</span><span class="rr-v">₡180,000</span></div>
+          <div class="rscen-row"><span class="rr-l">Costo fijo mensual plataforma</span><span class="rr-v">₡0</span></div>
+          <div class="rscen-total">
+            <span class="rt-l">Ingreso mensual total</span>
+            <span class="rt-v">₡2,532,000</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="refugio-price-box">
+        💡 <strong>El ingreso adicional permite bajar el precio de las castraciones.</strong>
+        Si un refugio recibe ₡500,000 al mes en donaciones pasivas, puede reducir el precio de castración
+        de ₡32,000 a <strong>₡19,000</strong> manteniendo el mismo ingreso neto —
+        haciendo la esterilización accesible para dueños de menores recursos y atendiendo
+        <strong>más animales por feria</strong>. Menos precio = más participación = más impacto.
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ BLOQUE D: CICLO VIRTUOSO ══ -->
+  <hr class="div"/>
+  <div class="block">
+    <span class="section-tag tag-green">El efecto que se multiplica solo</span>
+    <h2>No es un evento.<br/><em>Es un ciclo que se retroalimenta.</em></h2>
+    <p class="lead">
+      Cada feria bien ejecutada no solo ayuda a los animales de ese día. Genera los recursos,
+      la visibilidad y la confianza para hacer la siguiente feria más grande, con más cupos,
+      y llegando a más dueños.
+    </p>
+
+    <div class="cycle-wrap">
+      <div class="cycle-step cycle-1">
+        <div class="cycle-num">1</div>
+        <h3>Más ferias, más accesibles</h3>
+        <p>Con ingresos pasivos por donaciones, las organizaciones pueden bajar el precio por castración o ampliar cupos — llegando a dueños que antes no podían pagar.</p>
+        <span class="cycle-badge">Más mascotas atendidas</span>
+      </div>
+      <div class="cycle-step cycle-2">
+        <div class="cycle-num">2</div>
+        <h3>Menos abandonos, menos callejeros</h3>
+        <p>Cada animal castrado corta una cadena de reproducción. Con el tiempo, los refugios reciben menos animales nuevos y pueden destinar recursos a los que ya tienen.</p>
+        <span class="cycle-badge">Menos presión sobre refugios</span>
+      </div>
+      <div class="cycle-step cycle-3">
+        <div class="cycle-num">3</div>
+        <h3>Refugios con más capacidad</h3>
+        <p>Menos animales entrando + más ingresos por donaciones = más espacio, mejor atención y más posibilidades de adopción exitosa para los animales bajo su cuidado.</p>
+        <span class="cycle-badge">Mejor calidad de vida animal</span>
+      </div>
+      <div class="cycle-step cycle-4">
+        <div class="cycle-num">4</div>
+        <h3>Comunidad que confía y dona más</h3>
+        <p>Los dueños que ven el impacto real de sus donaciones vuelven a donar. Las orgs con resultados visibles atraen más voluntarios, más aliados y más visibilidad en redes.</p>
+        <span class="cycle-badge">Más recursos para la causa</span>
+      </div>
+      <div class="cycle-center">
+        ↩ El ciclo vuelve al paso 1 — con más orgs, más cupos y más animales atendidos.<br/>
+        <em>Así es como se cambia un número de 1.5 millones.</em>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ BLOQUE: DONACIONES ══ -->
+  <hr class="div"/>
+  <div class="block">
+    <span class="section-tag tag-green">Las donaciones son 100% de las organizaciones</span>
     <h2>Un ingreso que hoy<br/><em>simplemente no existe.</em></h2>
     <p class="lead">
-      Cuando el dueño termina de registrar su mascota, la plataforma le pregunta si quiere hacer una donación adicional a la causa.
-      Es una pregunta simple que aparece en el momento justo — cuando el dueño ya está comprometido con el bienestar de su animal.
-      Todo lo que donén va directamente a tu organización. La plataforma no retiene nada.
+      Cuando el dueño termina de registrar su mascota, la plataforma le pregunta si quiere hacer una donación adicional.
+      Es el momento de mayor intención — justo cuando ya está comprometido con el bienestar de su animal.
+      Todo lo que donen va directamente a las organizaciones. La plataforma no retiene nada.
     </p>
 
     <div class="donation-modes">
@@ -860,32 +1082,187 @@
         <div class="dmode-title">Modo 1 — Todo para tu org</div>
         <div class="dmode-desc">
           Las donaciones van 100% a la organización que coordina la feria.
-          Ideal para el piloto y para ferias de una sola organización.
-          Sin división, sin complicaciones.
+          Ideal para el piloto y para ferias de una sola organización. Sin división, sin complicaciones.
         </div>
         <div class="dmode-badge">✓ Recomendado para el piloto</div>
       </div>
-
       <div class="dmode">
         <div class="dmode-icon">🤝</div>
         <div class="dmode-title">Modo 2 — Split entre orgs aliadas</div>
         <div class="dmode-desc">
-          Si varias organizaciones colaboran en la feria, el organizador define cómo se divide
-          el dinero — 60/40, 50/50, o cualquier porcentaje acordado.
-          El sistema lo distribuye automáticamente.
+          El organizador define cómo se divide el dinero entre varias organizaciones — 60/40, 50/50,
+          o cualquier porcentaje acordado. El sistema lo distribuye automáticamente.
         </div>
         <div class="dmode-badge">Para ferias colaborativas</div>
       </div>
     </div>
   </div>
 
-  <!-- ══ BLOQUE 6: EL PILOTO ══ -->
+  <!-- ══ BLOQUE F: IMPACTO PROYECTADO ══ -->
+  <hr class="div"/>
+  <div class="block">
+    <span class="section-tag tag-purple">El impacto que se escala</span>
+    <h2>Imaginá qué pasa cuando<br/><em>se suman más organizaciones.</em></h2>
+    <p class="lead">
+      Una sola org cambia la vida de 40 animales por feria. Pero la plataforma está diseñada
+      para conectar a todas las organizaciones de Costa Rica. Mové el slider y mirá el impacto real.
+    </p>
+
+    <div class="impact-calc">
+      <div class="ic-title">🌎 Calculadora de impacto nacional</div>
+
+      <div class="ic-slider-wrap">
+        <div class="ic-slider-label">
+          Organizaciones activas en la plataforma
+          <span id="orgs-val">10</span>
+        </div>
+        <input type="range" id="orgs-slider" min="1" max="100" value="10" step="1" oninput="calcImpact()">
+      </div>
+
+      <div class="ic-grid">
+        <div class="ic-item">
+          <div class="ic-icon">🐾</div>
+          <div class="ic-val" style="color:#6ee7b7;" id="imp-mascotas">4,800</div>
+          <div class="ic-lbl">mascotas castradas<br/>por año</div>
+        </div>
+        <div class="ic-item">
+          <div class="ic-icon">🌿</div>
+          <div class="ic-val" style="color:#a78bfa;" id="imp-evitados">96M</div>
+          <div class="ic-lbl">animales que no nacen<br/>en la calle (5 años)</div>
+        </div>
+        <div class="ic-item">
+          <div class="ic-icon">💰</div>
+          <div class="ic-val" style="color:#fcd34d;" id="imp-ingresos">₡168M</div>
+          <div class="ic-lbl">generados para<br/>organizaciones/año</div>
+        </div>
+        <div class="ic-item">
+          <div class="ic-icon">🏠</div>
+          <div class="ic-val" style="color:#fca5a5;" id="imp-refugios">₡14M</div>
+          <div class="ic-lbl">en donaciones<br/>para refugios/año</div>
+        </div>
+      </div>
+
+      <div class="ic-note">
+        Basado en: 1 feria/mes por org · 40 cupos · ₡32,000 promedio · 30% donantes · ₡2,000 donación promedio.
+        Animales evitados calculados con reproducción conservadora de 20,000 descendientes por animal en 5 años.
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ CALCULADORA ══ -->
+  <hr class="div"/>
+  <div class="block">
+    <span class="section-tag tag-green">Calculadora de tu feria</span>
+    <h2>Usá tus propios números.<br/><em>Ves el resultado en tiempo real.</em></h2>
+    <p class="lead">
+      Ajustá los valores según tu feria real y la calculadora te muestra exactamente cuánto ganarías con y sin la plataforma.
+    </p>
+
+    <div id="calc" style="background:#fff; border:2px solid var(--green); border-radius:1.5rem; overflow:hidden;">
+      <div style="padding:2rem; display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:1.5rem;">
+
+        <div class="ci">
+          <label class="ci-label">Cupos disponibles por feria</label>
+          <div class="ci-row">
+            <input type="range" id="cupos" min="10" max="150" value="40" step="5" oninput="calcFeria()">
+            <span class="ci-val" id="cupos-val">40</span>
+          </div>
+        </div>
+        <div class="ci">
+          <label class="ci-label">Precio promedio por mascota (₡)</label>
+          <div class="ci-row">
+            <input type="range" id="precio" min="5000" max="80000" value="32000" step="1000" oninput="calcFeria()">
+            <span class="ci-val" id="precio-val">₡32,000</span>
+          </div>
+        </div>
+        <div class="ci">
+          <label class="ci-label">% de cupos que se llenan hoy</label>
+          <div class="ci-row">
+            <input type="range" id="fill" min="20" max="100" value="70" step="5" oninput="calcFeria()">
+            <span class="ci-val" id="fill-val">70%</span>
+          </div>
+        </div>
+        <div class="ci">
+          <label class="ci-label">% de no-shows el día del evento</label>
+          <div class="ci-row">
+            <input type="range" id="noshow" min="0" max="40" value="20" step="5" oninput="calcFeria()">
+            <span class="ci-val" id="noshow-val">20%</span>
+          </div>
+        </div>
+        <div class="ci">
+          <label class="ci-label">% de registrados que donan</label>
+          <div class="ci-row">
+            <input type="range" id="donpct" min="0" max="60" value="30" step="5" oninput="calcFeria()">
+            <span class="ci-val" id="donpct-val">30%</span>
+          </div>
+        </div>
+        <div class="ci">
+          <label class="ci-label">Donación promedio (₡)</label>
+          <div class="ci-row">
+            <input type="range" id="donmonto" min="500" max="10000" value="2000" step="500" oninput="calcFeria()">
+            <span class="ci-val" id="donmonto-val">₡2,000</span>
+          </div>
+        </div>
+
+      </div>
+
+      <div style="background:#f8fafc; border-top:1px solid var(--border); padding:2rem;">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1.2rem;">
+
+          <div style="background:#fff5f5; border:2px solid #fca5a5; border-radius:1.1rem; padding:1.3rem;">
+            <div style="font-size:.72rem; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--red); margin-bottom:.9rem;">⚠️ Sin plataforma</div>
+            <div class="cr"><span class="cl">Mascotas atendidas</span><span class="cv red" id="r-sin-mascotas">—</span></div>
+            <div class="cr"><span class="cl">Ingresos</span><span class="cv red" id="r-sin-castrac">—</span></div>
+            <div class="cr"><span class="cl">Donaciones</span><span class="cv red">₡0</span></div>
+            <div class="cr"><span class="cl">Animales evitados (5 años)</span><span class="cv red" id="r-sin-evit">—</span></div>
+            <div style="margin-top:.9rem; padding-top:.9rem; border-top:2px solid #fca5a5; display:flex; justify-content:space-between; align-items:baseline;">
+              <span style="font-size:.85rem; font-weight:700; color:var(--dark);">Total neto</span>
+              <span style="font-size:1.8rem; font-weight:800; color:var(--red);" id="r-sin-total">—</span>
+            </div>
+          </div>
+
+          <div style="background:#f0fdf4; border:2px solid var(--green); border-radius:1.1rem; padding:1.3rem; position:relative;">
+            <div style="position:absolute;top:-.6rem;left:50%;transform:translateX(-50%);background:var(--green);color:#fff;font-size:.65rem;font-weight:800;padding:.15rem .7rem;border-radius:999px;white-space:nowrap;">Con CastraCR</div>
+            <div style="font-size:.72rem; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--green-dark); margin-bottom:.9rem;">✅ Con la plataforma</div>
+            <div class="cr"><span class="cl">Mascotas atendidas</span><span class="cv grn" id="r-con-mascotas">—</span></div>
+            <div class="cr"><span class="cl">Ingresos por castración (90%)</span><span class="cv grn" id="r-con-castrac">—</span></div>
+            <div class="cr"><span class="cl">Donaciones (100% tuyas)</span><span class="cv grn" id="r-con-don">—</span></div>
+            <div class="cr"><span class="cl">Animales evitados (5 años)</span><span class="cv grn" id="r-con-evit">—</span></div>
+            <div style="margin-top:.9rem; padding-top:.9rem; border-top:2px solid var(--green); display:flex; justify-content:space-between; align-items:baseline;">
+              <span style="font-size:.85rem; font-weight:700; color:var(--dark);">Total neto</span>
+              <span style="font-size:1.8rem; font-weight:800; color:var(--green);" id="r-con-total">—</span>
+            </div>
+          </div>
+
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+          <div style="background:var(--green-light); border:1px solid #6ee7b7; border-radius:1rem; padding:1.2rem; text-align:center;">
+            <div style="font-size:.75rem; font-weight:700; color:var(--green-dark); margin-bottom:.3rem;">Ganás más por feria</div>
+            <div style="font-size:2.2rem; font-weight:800; color:var(--green-dark);" id="r-delta">—</div>
+            <div style="font-size:.75rem; color:#059669; margin-top:.2rem;" id="r-delta-pct">—</div>
+          </div>
+          <div style="background:#eff6ff; border:1px solid #93c5fd; border-radius:1rem; padding:1.2rem; text-align:center;">
+            <div style="font-size:.75rem; font-weight:700; color:#1e40af; margin-bottom:.3rem;">Proyección anual (12 ferias)</div>
+            <div style="font-size:2.2rem; font-weight:800; color:#1d4ed8;" id="r-anual">—</div>
+            <div style="font-size:.75rem; color:#3b82f6; margin-top:.2rem;" id="r-anual-sub">—</div>
+          </div>
+        </div>
+
+        <div style="margin-top:1rem; background:var(--amber-light); border:1px solid #fcd34d; border-radius:.9rem; padding:.9rem 1.2rem; font-size:.82rem; color:#92400e; line-height:1.55;">
+          💛 <strong>Durante las 3 ferias del piloto:</strong> el 10% de comisión no aplica — todo el total neto es tuyo. En tu caso: <strong id="r-piloto">—</strong> en 3 ferias gratis.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ BLOQUE: EL PILOTO ══ -->
   <hr class="div"/>
   <div class="block">
     <span class="section-tag tag-amber">Cómo arrancamos juntos</span>
     <h2>3 ferias gratis.<br/><em>Sin contratos. Sin riesgo.</em></h2>
     <p class="lead">
-      Creemos tanto en lo que la plataforma puede hacer por tu organización que te damos las primeras 3 ferias completamente gratis.
+      Creemos tanto en lo que la plataforma puede hacer por los animales de Costa Rica que damos las primeras 3 ferias completamente gratis.
       No pedimos compromiso previo — solo que lo probés y que los números hablen por sí solos.
     </p>
 
@@ -894,41 +1271,38 @@
         <div class="jnum">1</div>
         <div class="jtitle">Ferias 1, 2 y 3 — Gratis</div>
         <div class="jbody">
-          Acceso completo a todo: bot de WhatsApp, geolocalización, check-in QR, recordatorios automáticos, lista de espera y canal de donaciones.
+          Acceso completo: bot de WhatsApp, geolocalización, check-in QR, recordatorios, lista de espera y canal de donaciones.
           El 100% de lo que recaudés en estas 3 ferias es tuyo — sin comisión, sin excepción.
         </div>
         <div class="jbadge">0% comisión — 3 ferias completas</div>
       </div>
-
       <div class="jstep jstep-2">
         <div class="jnum">2</div>
         <div class="jtitle">Feria 4 — Se activa el modelo real</div>
         <div class="jbody">
-          Desde la cuarta feria aplica el 90%/10%. Para ese momento ya tenés 3 ferias de datos reales:
-          cuántas mascotas extra atendiste, cuánto dinero llegó por donaciones, cuánto tiempo ahorraste.
+          Desde la cuarta feria aplica el 90%/10%. Para ese momento tenés 3 ferias de datos reales:
+          cuántas mascotas extra atendiste, cuánto llegó en donaciones, cuánto tiempo ahorraste.
           Con esos números la conversación es completamente distinta.
         </div>
         <div class="jbadge">90% para tu org / 10% plataforma</div>
       </div>
-
       <div class="jstep jstep-3">
         <div class="jnum">3</div>
         <div class="jtitle">Mes 4 en adelante — Crecés sin techo</div>
         <div class="jbody">
           Cada feria bien ejecutada trae más visibilidad, más donantes recurrentes y más dueños que te recomiendan.
-          La plataforma escala con vos — sin cambios en el modelo, sin sorpresas, sin mensualidades.
+          Podés bajar el precio de castración con los ingresos pasivos y llegar a más familias.
         </div>
         <div class="jbadge">Sin mensualidad · Pago solo por uso</div>
       </div>
     </div>
 
-    <!-- LO QUE TE LLEVÁS EN EL PILOTO -->
     <div class="pilot-box">
-      <div class="pilot-box-title">💛 Lo que te llevás en las 3 ferias gratuitas</div>
+      <div class="pilot-box-title">💛 Lo que lográs en las 3 ferias gratuitas</div>
       <div class="pilot-stats">
         <div>
           <div class="ps-val">120</div>
-          <div class="ps-label">mascotas atendidas<br/>(40 por feria × 3)</div>
+          <div class="ps-label">mascotas castradas<br/>(40 por feria × 3)</div>
         </div>
         <div>
           <div class="ps-val">₡3,528,000</div>
@@ -939,247 +1313,42 @@
           <div class="ps-label">en donaciones nuevas<br/>que antes no existían</div>
         </div>
         <div>
-          <div class="ps-val">₡0</div>
-          <div class="ps-label">costo para tu org<br/>durante el piloto</div>
+          <div class="ps-val">2.4M</div>
+          <div class="ps-label">animales que no nacerán<br/>en la calle (5 años)*</div>
         </div>
+      </div>
+      <div style="margin-top:1rem; font-size:.76rem; color:#a16207; line-height:1.5;">
+        * Estimado conservador basado en cadena de reproducción de 20,000 descendientes por animal en 5 años.
       </div>
     </div>
   </div>
-
-  <!-- ══ CALCULADORA ══ -->
-  <hr class="div"/>
-  <div class="block">
-    <span class="section-tag tag-green">Calculadora interactiva</span>
-    <h2>Usá tus propios números.<br/><em>Ves el resultado en tiempo real.</em></h2>
-    <p class="lead">
-      Ajustá los valores según tu feria real y la calculadora te muestra exactamente cuánto ganarías con y sin la plataforma.
-    </p>
-
-    <div id="calc" style="background:#fff; border:2px solid var(--green); border-radius:1.5rem; overflow:hidden;">
-
-      <!-- INPUTS -->
-      <div style="padding:2rem; display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:1.5rem;">
-
-        <div class="ci">
-          <label class="ci-label">Cupos disponibles por feria</label>
-          <div class="ci-row">
-            <input type="range" id="cupos" min="10" max="150" value="40" step="5" oninput="calc()">
-            <span class="ci-val" id="cupos-val">40</span>
-          </div>
-        </div>
-
-        <div class="ci">
-          <label class="ci-label">Precio promedio por mascota (₡)</label>
-          <div class="ci-row">
-            <input type="range" id="precio" min="5000" max="80000" value="32000" step="1000" oninput="calc()">
-            <span class="ci-val" id="precio-val">₡32,000</span>
-          </div>
-        </div>
-
-        <div class="ci">
-          <label class="ci-label">% de cupos que se llenan hoy</label>
-          <div class="ci-row">
-            <input type="range" id="fill" min="20" max="100" value="70" step="5" oninput="calc()">
-            <span class="ci-val" id="fill-val">70%</span>
-          </div>
-        </div>
-
-        <div class="ci">
-          <label class="ci-label">% de no-shows el día del evento</label>
-          <div class="ci-row">
-            <input type="range" id="noshow" min="0" max="40" value="20" step="5" oninput="calc()">
-            <span class="ci-val" id="noshow-val">20%</span>
-          </div>
-        </div>
-
-        <div class="ci">
-          <label class="ci-label">% de registrados que donan</label>
-          <div class="ci-row">
-            <input type="range" id="donpct" min="0" max="60" value="30" step="5" oninput="calc()">
-            <span class="ci-val" id="donpct-val">30%</span>
-          </div>
-        </div>
-
-        <div class="ci">
-          <label class="ci-label">Donación promedio (₡)</label>
-          <div class="ci-row">
-            <input type="range" id="donmonto" min="500" max="10000" value="2000" step="500" oninput="calc()">
-            <span class="ci-val" id="donmonto-val">₡2,000</span>
-          </div>
-        </div>
-
-      </div>
-
-      <!-- RESULTADO -->
-      <div style="background:#f8fafc; border-top:1px solid var(--border); padding:2rem;">
-
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1.2rem;">
-
-          <!-- SIN PLATAFORMA -->
-          <div style="background:#fff5f5; border:2px solid #fca5a5; border-radius:1.1rem; padding:1.3rem;">
-            <div style="font-size:.72rem; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--red); margin-bottom:.9rem;">⚠️ Sin plataforma</div>
-            <div class="cr"><span class="cl">Mascotas atendidas</span><span class="cv red" id="r-sin-mascotas">—</span></div>
-            <div class="cr"><span class="cl">Ingresos por castración</span><span class="cv red" id="r-sin-castrac">—</span></div>
-            <div class="cr"><span class="cl">Donaciones</span><span class="cv red" id="r-sin-don">₡0</span></div>
-            <div style="margin-top:.9rem; padding-top:.9rem; border-top:2px solid #fca5a5; display:flex; justify-content:space-between; align-items:baseline;">
-              <span style="font-size:.85rem; font-weight:700; color:var(--dark);">Total neto</span>
-              <span style="font-size:1.8rem; font-weight:800; color:var(--red);" id="r-sin-total">—</span>
-            </div>
-          </div>
-
-          <!-- CON PLATAFORMA -->
-          <div style="background:#f0fdf4; border:2px solid var(--green); border-radius:1.1rem; padding:1.3rem; position:relative;">
-            <div style="position:absolute;top:-.6rem;left:50%;transform:translateX(-50%);background:var(--green);color:#fff;font-size:.65rem;font-weight:800;padding:.15rem .7rem;border-radius:999px;white-space:nowrap;">Con CastraCR</div>
-            <div style="font-size:.72rem; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--green-dark); margin-bottom:.9rem;">✅ Con la plataforma</div>
-            <div class="cr"><span class="cl">Mascotas atendidas</span><span class="cv grn" id="r-con-mascotas">—</span></div>
-            <div class="cr"><span class="cl">Ingresos por castración (90%)</span><span class="cv grn" id="r-con-castrac">—</span></div>
-            <div class="cr"><span class="cl">Donaciones (100% tuyas)</span><span class="cv grn" id="r-con-don">—</span></div>
-            <div style="margin-top:.9rem; padding-top:.9rem; border-top:2px solid var(--green); display:flex; justify-content:space-between; align-items:baseline;">
-              <span style="font-size:.85rem; font-weight:700; color:var(--dark);">Total neto</span>
-              <span style="font-size:1.8rem; font-weight:800; color:var(--green);" id="r-con-total">—</span>
-            </div>
-          </div>
-
-        </div>
-
-        <!-- DELTA + ANUAL -->
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
-
-          <div style="background:var(--green-light); border:1px solid #6ee7b7; border-radius:1rem; padding:1.2rem; text-align:center;">
-            <div style="font-size:.75rem; font-weight:700; color:var(--green-dark); margin-bottom:.3rem;">Ganás más por feria</div>
-            <div style="font-size:2.2rem; font-weight:800; color:var(--green-dark);" id="r-delta">—</div>
-            <div style="font-size:.75rem; color:#059669; margin-top:.2rem;" id="r-delta-pct">—</div>
-          </div>
-
-          <div style="background:#eff6ff; border:1px solid #93c5fd; border-radius:1rem; padding:1.2rem; text-align:center;">
-            <div style="font-size:.75rem; font-weight:700; color:#1e40af; margin-bottom:.3rem;">Proyección anual (12 ferias)</div>
-            <div style="font-size:2.2rem; font-weight:800; color:#1d4ed8;" id="r-anual">—</div>
-            <div style="font-size:.75rem; color:#3b82f6; margin-top:.2rem;" id="r-anual-sub">—</div>
-          </div>
-
-        </div>
-
-        <!-- NOTA PILOTO -->
-        <div style="margin-top:1rem; background:var(--amber-light); border:1px solid #fcd34d; border-radius:.9rem; padding:.9rem 1.2rem; font-size:.82rem; color:#92400e; line-height:1.55;">
-          💛 <strong>Durante las 3 ferias del piloto:</strong> el 10% de comisión no aplica — todo el total neto es tuyo. En tu caso: <strong id="r-piloto">—</strong> en 3 ferias gratis.
-        </div>
-
-      </div>
-    </div>
-
-  </div>
-
-  <style>
-    .ci { display:flex; flex-direction:column; gap:.5rem; }
-    .ci-label { font-size:.8rem; font-weight:700; color:var(--slate); }
-    .ci-row { display:flex; align-items:center; gap:.8rem; }
-    .ci-row input[type=range] { flex:1; accent-color:var(--green); cursor:pointer; }
-    .ci-val { font-size:1rem; font-weight:800; color:var(--green-dark); min-width:70px; text-align:right; }
-    .cr { display:flex; justify-content:space-between; font-size:.84rem; padding:.32rem 0; border-bottom:1px dashed var(--border); }
-    .cr:last-of-type { border-bottom:none; }
-    .cl { color:var(--muted); }
-    .cv { font-weight:700; }
-    .cv.red { color:var(--red); }
-    .cv.grn { color:var(--green-dark); }
-  </style>
-
-  <script>
-    function fmt(n) {
-      return '₡' + Math.round(n).toLocaleString('es-CR');
-    }
-
-    function calc() {
-      const cupos    = +document.getElementById('cupos').value;
-      const precio   = +document.getElementById('precio').value;
-      const fillPct  = +document.getElementById('fill').value / 100;
-      const noPct    = +document.getElementById('noshow').value / 100;
-      const donPct   = +document.getElementById('donpct').value / 100;
-      const donMonto = +document.getElementById('donmonto').value;
-
-      // Labels
-      document.getElementById('cupos-val').textContent    = cupos;
-      document.getElementById('precio-val').textContent   = fmt(precio);
-      document.getElementById('fill-val').textContent     = Math.round(fillPct*100) + '%';
-      document.getElementById('noshow-val').textContent   = Math.round(noPct*100) + '%';
-      document.getElementById('donpct-val').textContent   = Math.round(donPct*100) + '%';
-      document.getElementById('donmonto-val').textContent = fmt(donMonto);
-
-      // ── SIN PLATAFORMA ──
-      const sinRegistran = Math.round(cupos * fillPct);
-      const sinAtienden  = Math.round(sinRegistran * (1 - noPct));
-      const sinIngresos  = sinAtienden * precio;
-      const sinTotal     = sinIngresos; // sin donaciones
-
-      // ── CON PLATAFORMA ──
-      // Llena todos los cupos + lista espera cubre no-shows → 100% asistencia
-      const conAtienden  = cupos;
-      const conBruto     = conAtienden * precio;
-      const conOrg90     = conBruto * 0.9;
-      const conDonantes  = Math.round(conAtienden * donPct);
-      const conDonTotal  = conDonantes * donMonto;
-      const conTotal     = conOrg90 + conDonTotal;
-
-      // ── DELTA ──
-      const delta    = conTotal - sinTotal;
-      const deltaPct = sinTotal > 0 ? ((delta / sinTotal) * 100).toFixed(0) : 0;
-
-      // ── ANUAL ──
-      const anualCon = conTotal * 12;
-      const anualSin = sinTotal * 12;
-      const anualDelta = anualCon - anualSin;
-
-      // ── PILOTO (3 ferias, 0% comisión) ──
-      const pilotoConTotal = conBruto + conDonTotal; // sin descuento de 10%
-      const piloto3 = pilotoConTotal * 3;
-
-      // Render
-      document.getElementById('r-sin-mascotas').textContent = sinAtienden + ' de ' + cupos;
-      document.getElementById('r-sin-castrac').textContent  = fmt(sinIngresos);
-      document.getElementById('r-sin-total').textContent    = fmt(sinTotal);
-
-      document.getElementById('r-con-mascotas').textContent = conAtienden + ' de ' + cupos + ' ✓';
-      document.getElementById('r-con-castrac').textContent  = fmt(conOrg90);
-      document.getElementById('r-con-don').textContent      = fmt(conDonTotal);
-      document.getElementById('r-con-total').textContent    = fmt(conTotal);
-
-      document.getElementById('r-delta').textContent     = '+' + fmt(delta);
-      document.getElementById('r-delta-pct').textContent = '+' + deltaPct + '% más que hoy';
-
-      document.getElementById('r-anual').textContent     = '+' + fmt(anualDelta);
-      document.getElementById('r-anual-sub').textContent = fmt(anualCon) + ' vs ' + fmt(anualSin) + ' hoy';
-
-      document.getElementById('r-piloto').textContent = fmt(piloto3);
-    }
-
-    calc(); // inicializar
-  </script>
 
   <!-- ══ CIERRE ══ -->
   <div class="close-box">
-    <h2>Más mascotas. Más ingresos.<br/><em>Menos trabajo.</em></h2>
+    <h2>Más mascotas castradas.<br/><em>Menos animales en la calle.</em></h2>
     <p>
-      Hoy atendés 22 mascotas y recaudás ₡704,000 por feria. Con CastraCR atendés 40 y
-      recaudás ₡1,176,000 — aun después del 10% de comisión. Son ₡472,000 más por feria,
-      54 mascotas más atendidas, y cero horas perdidas en coordinación manual.
-      Las primeras 3 ferias son completamente gratis para que lo comprobés con tus propios números.
+      Hoy atendés 22 mascotas y recaudás ₡704,000 por feria. Con CastraCR atendés 40 y recaudás ₡1,176,000 —
+      aun después del 10% de comisión. Pero más importante: esas 40 castraciones evitan que
+      800,000 animales más nazcan en condiciones de abandono en los próximos 5 años.
+      Las primeras 3 ferias son gratis para que lo comprobés con tus propios números.
     </p>
 
     <div class="close-stats">
       <div class="cs">
         <div class="cs-val">22 → 40</div>
-        <div class="cs-label">mascotas atendidas por feria</div>
+        <div class="cs-label">mascotas atendidas<br/>por feria</div>
       </div>
       <div class="cs">
         <div class="cs-val">+₡472k</div>
-        <div class="cs-label">más por feria neto (después del 10%)</div>
+        <div class="cs-label">más por feria<br/>neto para tu org</div>
+      </div>
+      <div class="cs">
+        <div class="cs-val">800k</div>
+        <div class="cs-label">animales evitados<br/>por feria en 5 años</div>
       </div>
       <div class="cs">
         <div class="cs-val">100%</div>
-        <div class="cs-label">donaciones para tu organización</div>
-      </div>
-      <div class="cs">
-        <div class="cs-val">3</div>
-        <div class="cs-label">ferias gratis para probarlo</div>
+        <div class="cs-label">donaciones para<br/>las organizaciones</div>
       </div>
     </div>
 
@@ -1190,5 +1359,106 @@
   </div>
 
 </div><!-- /page -->
+
+<script>
+  // ── CALCULADORA IMPACTO NACIONAL ──
+  function fmtNum(n) {
+    if (n >= 1_000_000) return (n / 1_000_000).toFixed(1).replace('.0','') + 'M';
+    if (n >= 1_000) return (n / 1_000).toFixed(0) + 'k';
+    return Math.round(n).toString();
+  }
+  function fmtCRC(n) {
+    if (n >= 1_000_000_000) return '₡' + (n/1_000_000_000).toFixed(1) + 'B';
+    if (n >= 1_000_000) return '₡' + (n/1_000_000).toFixed(0) + 'M';
+    if (n >= 1_000) return '₡' + (n/1_000).toFixed(0) + 'k';
+    return '₡' + Math.round(n);
+  }
+
+  function calcImpact() {
+    const orgs = +document.getElementById('orgs-slider').value;
+    document.getElementById('orgs-val').textContent = orgs;
+
+    const feriasPorAno    = orgs * 12;
+    const mascotas        = feriasPorAno * 40;
+    const evitados        = mascotas * 20000;
+    const ingresosOrgs    = feriasPorAno * 40 * 32000 * 0.9;
+    const donRefugios     = feriasPorAno * 40 * 0.3 * 2000;
+
+    document.getElementById('imp-mascotas').textContent  = fmtNum(mascotas);
+    document.getElementById('imp-evitados').textContent  = fmtNum(evitados);
+    document.getElementById('imp-ingresos').textContent  = fmtCRC(ingresosOrgs);
+    document.getElementById('imp-refugios').textContent  = fmtCRC(donRefugios);
+  }
+
+  // ── CALCULADORA DE FERIA ──
+  function fmt(n) {
+    return '₡' + Math.round(n).toLocaleString('es-CR');
+  }
+
+  function calcFeria() {
+    const cupos    = +document.getElementById('cupos').value;
+    const precio   = +document.getElementById('precio').value;
+    const fillPct  = +document.getElementById('fill').value / 100;
+    const noPct    = +document.getElementById('noshow').value / 100;
+    const donPct   = +document.getElementById('donpct').value / 100;
+    const donMonto = +document.getElementById('donmonto').value;
+
+    document.getElementById('cupos-val').textContent    = cupos;
+    document.getElementById('precio-val').textContent   = fmt(precio);
+    document.getElementById('fill-val').textContent     = Math.round(fillPct*100) + '%';
+    document.getElementById('noshow-val').textContent   = Math.round(noPct*100) + '%';
+    document.getElementById('donpct-val').textContent   = Math.round(donPct*100) + '%';
+    document.getElementById('donmonto-val').textContent = fmt(donMonto);
+
+    // SIN PLATAFORMA
+    const sinRegistran = Math.round(cupos * fillPct);
+    const sinAtienden  = Math.round(sinRegistran * (1 - noPct));
+    const sinIngresos  = sinAtienden * precio;
+    const sinTotal     = sinIngresos;
+    const sinEvitados  = sinAtienden * 20000;
+
+    // CON PLATAFORMA
+    const conAtienden  = cupos;
+    const conBruto     = conAtienden * precio;
+    const conOrg90     = conBruto * 0.9;
+    const conDonantes  = Math.round(conAtienden * donPct);
+    const conDonTotal  = conDonantes * donMonto;
+    const conTotal     = conOrg90 + conDonTotal;
+    const conEvitados  = conAtienden * 20000;
+
+    const delta    = conTotal - sinTotal;
+    const deltaPct = sinTotal > 0 ? ((delta / sinTotal) * 100).toFixed(0) : 0;
+    const anualCon   = conTotal * 12;
+    const anualSin   = sinTotal * 12;
+    const anualDelta = anualCon - anualSin;
+    const piloto3    = (conBruto + conDonTotal) * 3;
+
+    function fmtEvit(n) {
+      if (n >= 1_000_000) return (n/1_000_000).toFixed(1) + 'M animales';
+      if (n >= 1_000) return (n/1_000).toFixed(0) + 'k animales';
+      return n + ' animales';
+    }
+
+    document.getElementById('r-sin-mascotas').textContent = sinAtienden + ' de ' + cupos;
+    document.getElementById('r-sin-castrac').textContent  = fmt(sinIngresos);
+    document.getElementById('r-sin-evit').textContent     = fmtEvit(sinEvitados);
+    document.getElementById('r-sin-total').textContent    = fmt(sinTotal);
+
+    document.getElementById('r-con-mascotas').textContent = conAtienden + ' de ' + cupos + ' ✓';
+    document.getElementById('r-con-castrac').textContent  = fmt(conOrg90);
+    document.getElementById('r-con-don').textContent      = fmt(conDonTotal);
+    document.getElementById('r-con-evit').textContent     = fmtEvit(conEvitados);
+    document.getElementById('r-con-total').textContent    = fmt(conTotal);
+
+    document.getElementById('r-delta').textContent     = '+' + fmt(delta);
+    document.getElementById('r-delta-pct').textContent = '+' + deltaPct + '% más que hoy';
+    document.getElementById('r-anual').textContent     = '+' + fmt(anualDelta);
+    document.getElementById('r-anual-sub').textContent = fmt(anualCon) + ' vs ' + fmt(anualSin) + ' hoy';
+    document.getElementById('r-piloto').textContent    = fmt(piloto3);
+  }
+
+  calcImpact();
+  calcFeria();
+</script>
 </body>
 </html>
