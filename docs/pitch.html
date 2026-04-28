@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CastraCR — Campaña de Esterilización de Mascotas · Costa Rica</title>
+  <style>
+    :root {
+      --brand: #06b6d4;
+      --brand-dark: #0891b2;
+      --brand-deeper: #0e7490;
+      --dark: #0f172a;
+      --card-bg: #ffffff;
+      --muted: #64748b;
+      --light-bg: #f0f9ff;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--dark);
+      color: #1e293b;
+      overflow-x: hidden;
+    }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #0c4a6e 0%, #0e7490 40%, #06b6d4 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 3rem 1.5rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-paws {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    .paw {
+      position: absolute;
+      font-size: 2.5rem;
+      opacity: 0.08;
+      animation: float 6s ease-in-out infinite;
+    }
+    .paw:nth-child(2) { animation-delay: -2s; }
+    .paw:nth-child(3) { animation-delay: -4s; }
+    .paw:nth-child(4) { animation-delay: -1s; font-size: 1.8rem; }
+    .paw:nth-child(5) { animation-delay: -3s; font-size: 3.5rem; }
+    .paw:nth-child(6) { animation-delay: -5s; font-size: 1.5rem; }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0) rotate(-8deg); }
+      50%       { transform: translateY(-18px) rotate(6deg); }
+    }
+
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: .5rem;
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.25);
+      border-radius: 999px;
+      padding: .4rem 1.1rem;
+      color: #e0f7fa;
+      font-size: .85rem;
+      font-weight: 600;
+      letter-spacing: .04em;
+      margin-bottom: 1.8rem;
+      backdrop-filter: blur(8px);
+    }
+
+    .hero h1 {
+      font-size: clamp(2.4rem, 6vw, 4.5rem);
+      font-weight: 800;
+      color: #fff;
+      line-height: 1.1;
+      max-width: 780px;
+      letter-spacing: -.02em;
+      margin-bottom: 1.4rem;
+    }
+
+    .hero h1 span { color: #bae6fd; }
+
+    .hero p {
+      font-size: clamp(1.05rem, 2.2vw, 1.3rem);
+      color: rgba(255,255,255,0.82);
+      max-width: 600px;
+      line-height: 1.7;
+      margin-bottom: 2.5rem;
+    }
+
+    .hero-ctas {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: .5rem;
+      padding: .85rem 2rem;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      text-decoration: none;
+      transition: transform .18s, box-shadow .18s;
+      border: none;
+    }
+    .btn:hover { transform: translateY(-2px); }
+
+    .btn-white {
+      background: #fff;
+      color: var(--brand-deeper);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.18);
+    }
+    .btn-white:hover { box-shadow: 0 8px 30px rgba(0,0,0,0.25); }
+
+    .btn-outline-white {
+      background: rgba(255,255,255,0.12);
+      color: #fff;
+      border: 2px solid rgba(255,255,255,0.4);
+      backdrop-filter: blur(8px);
+    }
+    .btn-outline-white:hover { background: rgba(255,255,255,0.22); }
+
+    .hero-animals {
+      position: absolute;
+      bottom: 0;
+      right: 2rem;
+      font-size: 6rem;
+      opacity: 0.16;
+      line-height: 1;
+      user-select: none;
+    }
+
+    /* ── STATS ── */
+    .stats-strip {
+      background: var(--brand);
+      padding: 2.2rem 1.5rem;
+    }
+
+    .stats-inner {
+      max-width: 900px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 1rem;
+      text-align: center;
+    }
+
+    .stat-val {
+      font-size: 2.2rem;
+      font-weight: 800;
+      color: #fff;
+      line-height: 1;
+    }
+
+    .stat-label {
+      font-size: .85rem;
+      color: rgba(255,255,255,0.8);
+      margin-top: .3rem;
+      font-weight: 500;
+    }
+
+    /* ── PROBLEM ── */
+    .section {
+      padding: 5rem 1.5rem;
+    }
+
+    .section-inner {
+      max-width: 960px;
+      margin: 0 auto;
+    }
+
+    .section-tag {
+      display: inline-block;
+      background: #e0f7fa;
+      color: var(--brand-deeper);
+      font-size: .78rem;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      padding: .3rem .9rem;
+      border-radius: 999px;
+      margin-bottom: 1rem;
+    }
+
+    .section h2 {
+      font-size: clamp(1.8rem, 4vw, 2.8rem);
+      font-weight: 800;
+      color: #0f172a;
+      line-height: 1.2;
+      margin-bottom: 1.2rem;
+    }
+
+    .section p.lead {
+      font-size: 1.1rem;
+      color: var(--muted);
+      line-height: 1.75;
+      max-width: 680px;
+    }
+
+    .problem-bg { background: #fff; }
+    .solution-bg { background: var(--light-bg); }
+    .how-bg { background: #fff; }
+    .roles-bg { background: var(--light-bg); }
+    .tech-bg { background: #fff; }
+
+    /* ── PAIN POINTS ── */
+    .pain-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1.5rem;
+      margin-top: 3rem;
+    }
+
+    .pain-card {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 1.5rem;
+      padding: 1.8rem;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+    }
+
+    .pain-icon { font-size: 2.2rem; margin-bottom: .8rem; }
+    .pain-card h3 { font-size: 1rem; font-weight: 700; color: #0f172a; margin-bottom: .5rem; }
+    .pain-card p  { font-size: .9rem; color: var(--muted); line-height: 1.6; }
+
+    /* ── HOW IT WORKS ── */
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 2rem;
+      margin-top: 3rem;
+    }
+
+    .step {
+      text-align: center;
+    }
+
+    .step-num {
+      width: 3.2rem;
+      height: 3.2rem;
+      background: linear-gradient(135deg, var(--brand), var(--brand-deeper));
+      border-radius: 999px;
+      color: #fff;
+      font-size: 1.2rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1rem;
+      box-shadow: 0 4px 16px rgba(6,182,212,0.35);
+    }
+
+    .step h3 { font-size: 1rem; font-weight: 700; color: #0f172a; margin-bottom: .4rem; }
+    .step p  { font-size: .88rem; color: var(--muted); line-height: 1.55; }
+
+    .step-connector {
+      display: none;
+    }
+
+    /* ── ROLES ── */
+    .roles-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.5rem;
+      margin-top: 3rem;
+    }
+
+    .role-card {
+      background: #fff;
+      border-radius: 1.5rem;
+      padding: 2rem 1.5rem;
+      text-align: center;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.06);
+      border: 1px solid #e2e8f0;
+      transition: transform .2s, box-shadow .2s;
+    }
+    .role-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+    }
+
+    .role-emoji { font-size: 2.8rem; margin-bottom: .8rem; }
+    .role-card h3 { font-size: 1.05rem; font-weight: 700; color: #0f172a; margin-bottom: .5rem; }
+    .role-card p  { font-size: .88rem; color: var(--muted); line-height: 1.6; }
+
+    /* ── FEATURES ── */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.5rem;
+      margin-top: 3rem;
+    }
+
+    .feature {
+      display: flex;
+      gap: 1rem;
+      align-items: flex-start;
+    }
+
+    .feature-icon {
+      width: 2.8rem;
+      height: 2.8rem;
+      min-width: 2.8rem;
+      background: linear-gradient(135deg, #e0f7fa, #b3e5fc);
+      border-radius: .9rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+    }
+
+    .feature h3 { font-size: .95rem; font-weight: 700; color: #0f172a; margin-bottom: .3rem; }
+    .feature p  { font-size: .85rem; color: var(--muted); line-height: 1.55; }
+
+    /* ── TECH ── */
+    .tech-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .75rem;
+      margin-top: 2rem;
+    }
+
+    .tech-pill {
+      background: var(--light-bg);
+      border: 1px solid #bae6fd;
+      border-radius: 999px;
+      padding: .4rem 1rem;
+      font-size: .82rem;
+      font-weight: 600;
+      color: var(--brand-deeper);
+    }
+
+    .arch-diagram {
+      margin-top: 3rem;
+      background: #0f172a;
+      border-radius: 1.5rem;
+      padding: 2.5rem 2rem;
+      font-family: 'Courier New', monospace;
+      font-size: .82rem;
+      color: #7dd3fc;
+      line-height: 1.9;
+      overflow-x: auto;
+    }
+
+    .arch-diagram .comment { color: #475569; }
+    .arch-diagram .highlight { color: #22d3ee; font-weight: 700; }
+    .arch-diagram .arrow { color: #818cf8; }
+
+    /* ── BUSINESS ── */
+    .business-bg { background: var(--light-bg); }
+
+    .plans-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 1.5rem;
+      margin-top: 3rem;
+    }
+
+    .plan-limit-row {
+      display: flex;
+      align-items: center;
+      gap: .45rem;
+      font-size: .82rem;
+      color: var(--muted);
+      margin-top: .45rem;
+    }
+
+    .plan-limit-row .dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--brand);
+      flex-shrink: 0;
+    }
+
+    .plan-divider {
+      border: none;
+      border-top: 1px solid #e2e8f0;
+      margin: 1rem 0;
+    }
+
+    .plan-ong-note {
+      font-size: .75rem;
+      color: var(--brand-deeper);
+      font-weight: 600;
+      margin-top: .6rem;
+    }
+
+    .plan-card {
+      background: #fff;
+      border: 2px solid #e2e8f0;
+      border-radius: 1.5rem;
+      padding: 2rem 1.5rem;
+      text-align: center;
+      position: relative;
+    }
+
+    .plan-card.featured {
+      border-color: var(--brand);
+      box-shadow: 0 4px 24px rgba(6,182,212,0.2);
+    }
+
+    .plan-badge {
+      position: absolute;
+      top: -0.75rem;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--brand);
+      color: #fff;
+      font-size: .72rem;
+      font-weight: 700;
+      letter-spacing: .06em;
+      padding: .2rem .8rem;
+      border-radius: 999px;
+      text-transform: uppercase;
+    }
+
+    .plan-name  { font-size: 1rem; font-weight: 700; color: var(--muted); margin-bottom: .5rem; }
+    .plan-price { font-size: 2.4rem; font-weight: 800; color: #0f172a; line-height: 1; }
+    .plan-price span { font-size: 1rem; font-weight: 500; color: var(--muted); }
+    .plan-desc  { font-size: .85rem; color: var(--muted); margin-top: .6rem; line-height: 1.5; }
+
+    /* ── FOOTER ── */
+    .footer {
+      background: #0c1a2e;
+      color: rgba(255,255,255,0.5);
+      text-align: center;
+      padding: 3rem 1.5rem;
+      font-size: .88rem;
+      line-height: 1.7;
+    }
+
+    .footer strong { color: var(--brand); }
+
+    /* ── DIVIDER ── */
+    .wave-divider {
+      width: 100%;
+      overflow: hidden;
+      line-height: 0;
+    }
+
+    @media (max-width: 640px) {
+      .hero-animals { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ████████████████ HERO ████████████████ -->
+<section class="hero">
+  <div class="hero-paws" aria-hidden="true">
+    <span class="paw" style="top:12%;left:8%">🐾</span>
+    <span class="paw" style="top:30%;left:90%">🐾</span>
+    <span class="paw" style="top:70%;left:5%">🐾</span>
+    <span class="paw" style="top:80%;left:75%">🐾</span>
+    <span class="paw" style="top:5%;left:55%">🐾</span>
+    <span class="paw" style="top:50%;left:48%">🐾</span>
+  </div>
+
+  <div class="hero-eyebrow">
+    🐕 🐈 &nbsp;Costa Rica · Servicio gratuito para dueños de mascotas
+  </div>
+
+  <h1>
+    Campañas de castración<br/>
+    <span>cerca de vos,</span> cuando las necesitás
+  </h1>
+
+  <p>
+    CastraCR conecta dueños de mascotas, veterinarios y organizaciones rescatistas
+    para organizar campañas de esterilización geolocalizadas con notificaciones en tiempo real.
+  </p>
+
+  <div class="hero-ctas">
+    <a href="#como-funciona" class="btn btn-white">
+      🗺️ Cómo funciona
+    </a>
+    <a href="#tecnologia" class="btn btn-outline-white">
+      ⚡ Ver la plataforma
+    </a>
+  </div>
+
+  <div class="hero-animals" aria-hidden="true">🐕🐈</div>
+</section>
+
+<!-- ████████████████ STATS ████████████████ -->
+<div class="stats-strip">
+  <div class="stats-inner">
+    <div>
+      <div class="stat-val">~500k</div>
+      <div class="stat-label">perros y gatos callejeros estimados en CR</div>
+    </div>
+    <div>
+      <div class="stat-val">$0</div>
+      <div class="stat-label">costo para el dueño de la mascota</div>
+    </div>
+    <div>
+      <div class="stat-val">5 km</div>
+      <div class="stat-label">radio de búsqueda de campañas cercanas</div>
+    </div>
+    <div>
+      <div class="stat-val">24/7</div>
+      <div class="stat-label">bot WhatsApp para registrar mascotas</div>
+    </div>
+  </div>
+</div>
+
+<!-- ████████████████ PROBLEMA ████████████████ -->
+<section class="section problem-bg">
+  <div class="section-inner">
+    <span class="section-tag">El problema</span>
+    <h2>La sobrepoblación de mascotas es un problema real</h2>
+    <p class="lead">
+      Miles de perros y gatos viven en las calles de Costa Rica. Las campañas de castración
+      existen, pero la información está dispersa, los procesos son manuales y muchos dueños
+      nunca se enteran de las opciones disponibles cerca de ellos.
+    </p>
+
+    <div class="pain-grid">
+      <div class="pain-card">
+        <div class="pain-icon">📍</div>
+        <h3>Sin geolocalización</h3>
+        <p>Los dueños no saben qué campañas hay cerca de su casa ni cuándo serán.</p>
+      </div>
+      <div class="pain-card">
+        <div class="pain-icon">📝</div>
+        <h3>Registro manual</h3>
+        <p>Formularios en papel, llamadas telefónicas, WhatsApps sin organización.</p>
+      </div>
+      <div class="pain-card">
+        <div class="pain-icon">💸</div>
+        <h3>Sin trazabilidad</h3>
+        <p>Las organizaciones no pueden hacer seguimiento de donaciones ni distribución transparente.</p>
+      </div>
+      <div class="pain-card">
+        <div class="pain-icon">🔔</div>
+        <h3>Citas olvidadas</h3>
+        <p>Sin recordatorios, los dueños no se presentan el día de la campaña.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ████████████████ CÓMO FUNCIONA ████████████████ -->
+<section class="section solution-bg" id="como-funciona">
+  <div class="section-inner">
+    <span class="section-tag">Cómo funciona</span>
+    <h2>Simple para todos los que participan</h2>
+    <p class="lead">
+      Un flujo end-to-end que va desde la creación de la campaña hasta el check-in
+      con QR el día del evento.
+    </p>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <h3>Org publica campaña</h3>
+        <p>Una organización rescatista crea la campaña con fecha, lugar, cupos y veterinarios asignados.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <h3>Dueño encuentra campañas</h3>
+        <p>La app detecta tu ubicación y muestra campañas en un radio de ~5 km ordenadas por distancia.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <h3>Registro vía WhatsApp o web</h3>
+        <p>El bot de WhatsApp guiado por Claude AI registra mascota y dueño en minutos. También disponible en la app web.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <h3>Recordatorios automáticos</h3>
+        <p>El sistema envía notificaciones por email 24h y 2h antes de la campaña.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">5</div>
+        <h3>Check-in con QR</h3>
+        <p>El día del evento, el veterinario escanea el QR de la mascota para confirmar asistencia en segundos.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">6</div>
+        <h3>Distribución mensual</h3>
+        <p>Las donaciones se acumulan y se distribuyen mensualmente a las orgs proporcionalmente.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ████████████████ ROLES ████████████████ -->
+<section class="section roles-bg">
+  <div class="section-inner">
+    <span class="section-tag">Quiénes participan</span>
+    <h2>Una plataforma para todos</h2>
+    <p class="lead">Cuatro tipos de usuario con flujos diferenciados según su rol.</p>
+
+    <div class="roles-grid">
+      <div class="role-card">
+        <div class="role-emoji">🏠</div>
+        <h3>Dueño de mascota</h3>
+        <p>Busca campañas cercanas, registra a sus mascotas vía web o WhatsApp y recibe recordatorios automáticos.</p>
+      </div>
+      <div class="role-card">
+        <div class="role-emoji">🏥</div>
+        <h3>Veterinario</h3>
+        <p>Se registra en la plataforma, es asignado a campañas y hace check-in de mascotas el día del evento con QR.</p>
+      </div>
+      <div class="role-card">
+        <div class="role-emoji">🐾</div>
+        <h3>Organización rescatista</h3>
+        <p>Crea y gestiona campañas, administra cupos, publica horarios y recibe distribución mensual de donaciones.</p>
+      </div>
+      <div class="role-card">
+        <div class="role-emoji">⚙️</div>
+        <h3>SuperAdmin</h3>
+        <p>Aprueba veterinarios, gestiona organizaciones, administra la plataforma completa y supervisa distribuciones.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ████████████████ FEATURES ████████████████ -->
+<section class="section how-bg">
+  <div class="section-inner">
+    <span class="section-tag">Funcionalidades clave</span>
+    <h2>Todo lo que necesita una campaña</h2>
+
+    <div class="features-grid">
+      <div class="feature">
+        <div class="feature-icon">🗺️</div>
+        <div>
+          <h3>Geolocalización</h3>
+          <p>Búsqueda por geohash con precisión de ~5 km. Encuentra campañas sin que el dueño tenga que buscar manualmente.</p>
+        </div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">🤖</div>
+        <div>
+          <h3>Bot WhatsApp con IA</h3>
+          <p>Claude AI (Haiku/Sonnet 4) guía el registro de mascotas por WhatsApp — texto e imágenes incluidas.</p>
+        </div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">📱</div>
+        <div>
+          <h3>QR de check-in</h3>
+          <p>Cada mascota registrada recibe un QR único opaco. El check-in el día de la campaña es instantáneo.</p>
+        </div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">🔔</div>
+        <div>
+          <h3>Recordatorios automáticos</h3>
+          <p>Emails automáticos 24h y 2h antes. Con idempotencia para no enviar duplicados.</p>
+        </div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">💳</div>
+        <div>
+          <h3>Pagos con OnvoPay</h3>
+          <p>Integración local de pagos. Donaciones con distribución mensual transparente vía SINPE/IBAN.</p>
+        </div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">📊</div>
+        <div>
+          <h3>Impacto en tiempo real</h3>
+          <p>Dashboard de impacto: mascotas esterilizadas, campañas activas, organizaciones participantes.</p>
+        </div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">📷</div>
+        <div>
+          <h3>Fotos de mascotas</h3>
+          <p>Upload directo a S3 vía pre-signed URLs. Entregado por CloudFront CDN.</p>
+        </div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">⏳</div>
+        <div>
+          <h3>Lista de espera</h3>
+          <p>Cuando se llena una campaña, los dueños entran a lista de espera y son promovidos automáticamente si hay cancelaciones.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ████████████████ TECNOLOGÍA ████████████████ -->
+<section class="section tech-bg" id="tecnologia">
+  <div class="section-inner">
+    <span class="section-tag">Tecnología</span>
+    <h2>Stack moderno, serverless y escalable</h2>
+    <p class="lead">
+      Construido sobre AWS con arquitectura serverless. Sin servidores que mantener,
+      costo proporcional al uso, desplegado en minutos.
+    </p>
+
+    <div class="tech-pills">
+      <span class="tech-pill">Next.js 14</span>
+      <span class="tech-pill">React 18</span>
+      <span class="tech-pill">TypeScript 5.7</span>
+      <span class="tech-pill">Tailwind CSS</span>
+      <span class="tech-pill">AWS Lambda</span>
+      <span class="tech-pill">DynamoDB Single-Table</span>
+      <span class="tech-pill">AWS Cognito</span>
+      <span class="tech-pill">API Gateway HTTP</span>
+      <span class="tech-pill">S3 + CloudFront</span>
+      <span class="tech-pill">EventBridge</span>
+      <span class="tech-pill">DynamoDB Streams</span>
+      <span class="tech-pill">AWS SES</span>
+      <span class="tech-pill">Anthropic Claude AI</span>
+      <span class="tech-pill">Twilio WhatsApp</span>
+      <span class="tech-pill">OnvoPay</span>
+      <span class="tech-pill">AWS CDK</span>
+      <span class="tech-pill">Turbo Monorepo</span>
+      <span class="tech-pill">GitHub Actions</span>
+    </div>
+
+    <div class="arch-diagram">
+<span class="comment">// Arquitectura CastraCR — Serverless en AWS</span>
+
+<span class="highlight">FRONTEND</span>
+  apps/web   <span class="arrow">──▶</span> Next.js 14  (dueños, público)
+  apps/admin <span class="arrow">──▶</span> Next.js 14  (orgs, vets, superadmin)
+        │
+        └─ Auth: <span class="highlight">AWS Cognito</span> (4 grupos: SuperAdmin, Organizador, Veterinario, Dueno)
+
+<span class="highlight">API</span>
+  HTTP API Gateway  <span class="arrow">──▶</span>  JWT Authorizer (Cognito)
+        │
+        ├─ 39 Lambdas TypeScript  (campaigns, pets, registrations, vets, donations…)
+        ├─ /webhooks/onvopay      (pagos)
+        └─ /webhooks/whatsapp     (Claude AI bot)
+
+<span class="highlight">DATA</span>
+  DynamoDB single-table  (4 GSIs: organizador, geohash, userId, estado)
+  S3 privado + CloudFront CDN  (fotos de mascotas)
+  AWS Secrets Manager  (OnvoPay, Twilio, Anthropic keys)
+
+<span class="highlight">EVENTOS</span>
+  EventBridge  <span class="arrow">──▶</span>  monthly-close   (último día del mes)
+               <span class="arrow">──▶</span>  release-slots   (cada 15 min)
+               <span class="arrow">──▶</span>  reminder-24h    (cada 30 min)
+               <span class="arrow">──▶</span>  reminder-2h     (cada 15 min)
+  DDB Streams  <span class="arrow">──▶</span>  notify-waitlist (on cancelación)
+
+<span class="highlight">CI/CD</span>
+  develop <span class="arrow">──▶</span> dev   │  main <span class="arrow">──▶</span> staging  │  tag v* <span class="arrow">──▶</span> prod
+    </div>
+  </div>
+</section>
+
+<!-- ████████████████ MODELO DE NEGOCIO ████████████████ -->
+<section class="section business-bg">
+  <div class="section-inner">
+    <span class="section-tag">Modelo de negocio</span>
+    <h2>Pagás por lo que usás</h2>
+    <p class="lead">
+      Precios por volumen: el plan escala con la cantidad de campañas y cupos que necesitás cada mes.
+      Cuanto más usás la plataforma, más valor recibís — sin sorpresas.
+      Las ONGs registradas reciben un <strong>30% de descuento automático</strong> en cualquier plan.
+    </p>
+
+    <div class="plans-grid">
+
+      <!-- Libre -->
+      <div class="plan-card">
+        <div class="plan-name">Libre</div>
+        <div class="plan-price">$0<span>/mes</span></div>
+        <hr class="plan-divider"/>
+        <div class="plan-limit-row"><span class="dot"></span>1 campaña por mes</div>
+        <div class="plan-limit-row"><span class="dot"></span>Hasta 25 cupos</div>
+        <div class="plan-limit-row"><span class="dot"></span>Check-in QR incluido</div>
+        <div class="plan-limit-row" style="color:#94a3b8"><span class="dot" style="background:#cbd5e1"></span>Sin bot WhatsApp</div>
+        <div class="plan-limit-row" style="color:#94a3b8"><span class="dot" style="background:#cbd5e1"></span>Sin donaciones</div>
+      </div>
+
+      <!-- Starter -->
+      <div class="plan-card">
+        <div class="plan-name">Starter</div>
+        <div class="plan-price">$9<span>/mes</span></div>
+        <hr class="plan-divider"/>
+        <div class="plan-limit-row"><span class="dot"></span>4 campañas por mes</div>
+        <div class="plan-limit-row"><span class="dot"></span>Hasta 150 cupos/mes</div>
+        <div class="plan-limit-row"><span class="dot"></span>Bot WhatsApp incluido</div>
+        <div class="plan-limit-row"><span class="dot"></span>Recordatorios automáticos</div>
+        <div class="plan-limit-row" style="color:#94a3b8"><span class="dot" style="background:#cbd5e1"></span>Sin donaciones</div>
+        <div class="plan-ong-note">🐾 ONGs: $6.30/mes</div>
+      </div>
+
+      <!-- Pro -->
+      <div class="plan-card featured">
+        <div class="plan-badge">Más popular</div>
+        <div class="plan-name">Pro</div>
+        <div class="plan-price">$19<span>/mes</span></div>
+        <hr class="plan-divider"/>
+        <div class="plan-limit-row"><span class="dot"></span>12 campañas por mes</div>
+        <div class="plan-limit-row"><span class="dot"></span>Hasta 600 cupos/mes</div>
+        <div class="plan-limit-row"><span class="dot"></span>Bot WhatsApp incluido</div>
+        <div class="plan-limit-row"><span class="dot"></span>Donaciones activadas</div>
+        <div class="plan-limit-row"><span class="dot"></span>Venues múltiples</div>
+        <div class="plan-ong-note">🐾 ONGs: $13.30/mes</div>
+      </div>
+
+      <!-- Escala -->
+      <div class="plan-card">
+        <div class="plan-name">Escala</div>
+        <div class="plan-price">$34<span>/mes</span></div>
+        <hr class="plan-divider"/>
+        <div class="plan-limit-row"><span class="dot"></span>Campañas <strong>ilimitadas</strong></div>
+        <div class="plan-limit-row"><span class="dot"></span>Cupos <strong>ilimitados</strong></div>
+        <div class="plan-limit-row"><span class="dot"></span>Bot WhatsApp incluido</div>
+        <div class="plan-limit-row"><span class="dot"></span>Donaciones activadas</div>
+        <div class="plan-limit-row"><span class="dot"></span>Soporte prioritario</div>
+        <div class="plan-ong-note">🐾 ONGs: $23.80/mes</div>
+      </div>
+
+    </div>
+
+    <!-- Info boxes -->
+    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:1rem; margin-top:2rem;">
+
+      <div style="padding:1.4rem 1.6rem; background:#fff; border-radius:1.25rem; border:1px solid #bae6fd;">
+        <p style="font-size:.9rem; color:#0f172a; font-weight:700; margin-bottom:.4rem;">💰 Donaciones voluntarias</p>
+        <p style="font-size:.85rem; color:var(--muted); line-height:1.6;">
+          El 90% de cada cobro de feria va a la organización. Las donaciones son 100% para la org. El 10% de los cobros de feria sostiene la plataforma. Disponible desde plan Pro.
+        </p>
+      </div>
+
+      <div style="padding:1.4rem 1.6rem; background:#fff; border-radius:1.25rem; border:1px solid #bae6fd;">
+        <p style="font-size:.9rem; color:#0f172a; font-weight:700; margin-bottom:.4rem;">📊 Distribución mensual</p>
+        <p style="font-size:.85rem; color:var(--muted); line-height:1.6;">
+          El último día de cada mes, el sistema calcula la distribución proporcional
+          y el admin realiza las transferencias vía SINPE Móvil o IBAN.
+        </p>
+      </div>
+
+      <div style="padding:1.4rem 1.6rem; background:#fff; border-radius:1.25rem; border:1px solid #bae6fd;">
+        <p style="font-size:.9rem; color:#0f172a; font-weight:700; margin-bottom:.4rem;">🐾 Descuento ONG</p>
+        <p style="font-size:.85rem; color:var(--muted); line-height:1.6;">
+          Las ONGs registradas reciben automáticamente un 30% de descuento
+          sobre el precio de cualquier plan pagado.
+        </p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ████████████████ FOOTER ████████████████ -->
+<footer class="footer">
+  <p style="font-size:2rem; margin-bottom:1rem;">🐾</p>
+  <p>
+    <strong>CastraCR</strong> — Plataforma de campañas de esterilización de mascotas
+  </p>
+  <p style="margin-top:.5rem;">
+    castrar.cr &nbsp;·&nbsp; Costa Rica &nbsp;·&nbsp; 2026
+  </p>
+  <p style="margin-top:1.5rem; font-size:.78rem; opacity:.6;">
+    Construido con Next.js · AWS Lambda · DynamoDB · Claude AI · Twilio · OnvoPay
+  </p>
+</footer>
+
+</body>
+</html>

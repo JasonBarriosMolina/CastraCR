@@ -1,0 +1,15 @@
+{
+  "name": "@castrar-cr/lambda-monthly-close",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.717.0",
+    "@aws-sdk/lib-dynamodb": "^3.717.0",
+    "@castrar-cr/lambda-shared": "*",
+    "stripe": "^17.5.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.147",
+    "typescript": "^5.7.2"
+  }
+}

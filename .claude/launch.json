@@ -1,0 +1,19 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "web-dev",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["D:\\InHouse\\CastraCR\\node_modules\\next\\dist\\bin\\next", "dev", "--port", "3002"],
+      "cwd": "D:\\InHouse\\CastraCR\\apps\\web",
+      "port": 3002
+    },
+    {
+      "name": "admin-dev",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["D:\\InHouse\\CastraCR\\node_modules\\next\\dist\\bin\\next", "dev", "--port", "3001"],
+      "cwd": "D:\\InHouse\\CastraCR\\apps\\admin",
+      "port": 3001
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "name": "@castrar-cr/infra",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "build": "tsc",
+    "synth": "cdk synth",
+    "deploy:dev": "cdk deploy --all --context env=dev",
+    "deploy:staging": "cdk deploy --all --context env=staging",
+    "deploy:prod": "cdk deploy --all --require-approval broadening --context env=prod",
+    "diff": "cdk diff --all",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "aws-cdk-lib": "^2.173.4",
+    "constructs": "^10.4.2",
+    "source-map-support": "^0.5.21"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "aws-cdk": "^2.173.4",
+    "esbuild": "^0.27.4",
+    "typescript": "^5.7.2"
+  }
+}

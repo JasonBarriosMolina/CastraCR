@@ -1,0 +1,19 @@
+{
+  "name": "@castrar-cr/lambda-webhook-stripe",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.717.0",
+    "@aws-sdk/lib-dynamodb": "^3.717.0",
+    "@castrar-cr/lambda-shared": "*",
+    "@castrar-cr/types": "*",
+    "@castrar-cr/utils": "*",
+    "stripe": "^17.5.0",
+    "uuid": "^10.0.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.147",
+    "@types/uuid": "^10.0.0",
+    "typescript": "^5.7.2"
+  }
+}

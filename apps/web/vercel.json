@@ -1,0 +1,5 @@
+{
+  "buildCommand": "npx turbo run build --filter=@castrar-cr/web",
+  "outputDirectory": ".next",
+  "framework": "nextjs"
+}

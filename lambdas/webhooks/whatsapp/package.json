@@ -1,0 +1,22 @@
+{
+  "name": "@castrar-cr/lambda-webhook-whatsapp",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "build": "tsc",
+    "test": "jest"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.36.3",
+    "@aws-sdk/client-dynamodb": "^3.717.0",
+    "@aws-sdk/lib-dynamodb": "^3.717.0",
+    "@castrar-cr/lambda-shared": "*",
+    "@castrar-cr/types": "*",
+    "@castrar-cr/utils": "*",
+    "twilio": "^5.4.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.147",
+    "typescript": "^5.7.2"
+  }
+}
