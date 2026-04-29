@@ -591,6 +591,93 @@
     .btn-green { background: var(--green); color: #fff; box-shadow: 0 4px 16px rgba(16,185,129,.4); }
     .btn-outline { background: rgba(255,255,255,.1); color: #fff; border: 2px solid rgba(255,255,255,.3); }
 
+    /* ── APP OVERVIEW ── */
+    .app-overview {
+      background: var(--dark);
+      padding: 3rem 1.5rem;
+      border-bottom: 1px solid rgba(255,255,255,.06);
+    }
+    .app-overview-inner {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .app-tag {
+      display: inline-block;
+      background: rgba(6,182,212,.18);
+      border: 1px solid rgba(6,182,212,.35);
+      color: #67e8f9;
+      font-size: .72rem;
+      font-weight: 800;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      padding: .3rem 1rem;
+      border-radius: 999px;
+      margin-bottom: 1.2rem;
+    }
+    .app-overview h2 {
+      color: #fff;
+      font-size: clamp(1.6rem, 3.5vw, 2.4rem);
+      margin-bottom: .7rem;
+    }
+    .app-overview h2 em { color: #6ee7b7; }
+    .app-overview .app-desc {
+      color: rgba(255,255,255,.65);
+      font-size: 1rem;
+      line-height: 1.75;
+      max-width: 680px;
+      margin-bottom: 2.2rem;
+    }
+    .app-pillars {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px,1fr));
+      gap: 1rem;
+      margin-bottom: 2.2rem;
+    }
+    .app-pillar {
+      background: rgba(255,255,255,.05);
+      border: 1px solid rgba(255,255,255,.09);
+      border-radius: 1.1rem;
+      padding: 1.4rem;
+      border-top: 3px solid var(--green);
+    }
+    .app-pillar.blue  { border-top-color: var(--brand); }
+    .app-pillar.amber { border-top-color: var(--amber); }
+    .app-pillar .ap-icon  { font-size: 1.8rem; margin-bottom: .6rem; }
+    .app-pillar .ap-title { font-size: .82rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: rgba(255,255,255,.4); margin-bottom: .5rem; }
+    .app-pillar .ap-text  { font-size: .88rem; color: rgba(255,255,255,.75); line-height: 1.65; }
+    .app-features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(190px,1fr));
+      gap: .75rem;
+    }
+    .app-feature {
+      display: flex;
+      align-items: flex-start;
+      gap: .75rem;
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.07);
+      border-radius: .9rem;
+      padding: .9rem 1rem;
+    }
+    .app-feature .af-icon { font-size: 1.3rem; flex-shrink: 0; margin-top: .05rem; }
+    .app-feature .af-text { font-size: .82rem; color: rgba(255,255,255,.65); line-height: 1.5; }
+    .app-feature .af-text strong { color: rgba(255,255,255,.9); display: block; margin-bottom: .15rem; font-size: .85rem; }
+    .app-roles {
+      display: flex;
+      gap: .6rem;
+      flex-wrap: wrap;
+      margin-top: 1.6rem;
+    }
+    .app-role {
+      background: rgba(255,255,255,.07);
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 999px;
+      padding: .35rem 1rem;
+      font-size: .8rem;
+      color: rgba(255,255,255,.6);
+    }
+    .app-role strong { color: #fff; }
+
     /* ── CALCULATOR STYLES ── */
     .ci { display:flex; flex-direction:column; gap:.5rem; }
     .ci-label { font-size:.8rem; font-weight:700; color:var(--slate); }
@@ -643,7 +730,316 @@
   </div>
 </div>
 
+<!-- ████ APP OVERVIEW ████ -->
+<div class="app-overview">
+  <div class="app-overview-inner">
+
+    <div class="app-tag">🐾 Sobre CastraCR — castrar.cr</div>
+    <h2 style="color:#fff; font-size:clamp(1.6rem,3.5vw,2.4rem); margin-bottom:.7rem;">
+      Una plataforma diseñada para que las<br/><em style="font-style:normal;color:#6ee7b7;">ferias de castración siempre se llenen.</em>
+    </h2>
+    <p class="app-desc">
+      CastraCR es una plataforma web y móvil que conecta dueños de mascotas, organizaciones rescatistas
+      y veterinarios en Costa Rica. Permite crear y gestionar campañas de esterilización —
+      con registro automatizado por WhatsApp, pagos en línea, check-in con QR y canal de donaciones integrado.
+      Todo desde el celular. Sin formularios en papel. Sin WhatsApps manuales.
+    </p>
+
+    <!-- PILARES -->
+    <div class="app-pillars">
+      <div class="app-pillar">
+        <div class="ap-icon">🎯</div>
+        <div class="ap-title">Objetivo</div>
+        <div class="ap-text">
+          Eliminar las barreras operativas que impiden a las organizaciones rescatistas
+          hacer más ferias de castración, llegar a más dueños y atender más animales
+          por evento — sin aumentar el trabajo manual de coordinación.
+        </div>
+      </div>
+      <div class="app-pillar blue">
+        <div class="ap-icon">📍</div>
+        <div class="ap-title">Para quién es</div>
+        <div class="ap-text">
+          Organizaciones rescatistas y casas cunas que organizan ferias · Refugios que quieren
+          recibir donaciones pasivas · Veterinarios que participan en campañas ·
+          Dueños de mascotas que buscan opciones de castración cerca de su casa.
+        </div>
+      </div>
+      <div class="app-pillar amber">
+        <div class="ap-icon">🏁</div>
+        <div class="ap-title">Meta a 12 meses</div>
+        <div class="ap-text">
+          Tener activas 10+ organizaciones en la plataforma, lograr que cada feria opere
+          al 100% de su capacidad, y generar un canal de donaciones recurrentes para
+          al menos 5 refugios que hoy no tienen ninguno.
+        </div>
+      </div>
+    </div>
+
+    <!-- FUNCIONALIDADES -->
+    <div style="font-size:.72rem; font-weight:800; letter-spacing:.1em; text-transform:uppercase; color:rgba(255,255,255,.3); margin-bottom:.9rem;">
+      ✦ Funcionalidades de la plataforma
+    </div>
+    <div class="app-features">
+      <div class="app-feature">
+        <div class="af-icon">🗺️</div>
+        <div class="af-text">
+          <strong>Búsqueda geolocalizada</strong>
+          Los dueños ven ferias cercanas en un radio de 5 km automáticamente, sin publicidad pagada.
+        </div>
+      </div>
+      <div class="app-feature">
+        <div class="af-icon">🤖</div>
+        <div class="af-text">
+          <strong>Bot de WhatsApp con IA</strong>
+          Claude AI (Anthropic) registra mascotas 24/7 por WhatsApp — nombre, especie, peso y foto incluida.
+        </div>
+      </div>
+      <div class="app-feature">
+        <div class="af-icon">💳</div>
+        <div class="af-text">
+          <strong>Pago anticipado (OnvoPay)</strong>
+          El dueño paga al registrarse. Reduce no-shows de ~20% a ~5% y garantiza el cupo.
+        </div>
+      </div>
+      <div class="app-feature">
+        <div class="af-icon">⏳</div>
+        <div class="af-text">
+          <strong>Lista de espera automática</strong>
+          Si los cupos se llenan, el sistema gestiona la lista solo. Si alguien cancela, notifica al siguiente.
+        </div>
+      </div>
+      <div class="app-feature">
+        <div class="af-icon">📱</div>
+        <div class="af-text">
+          <strong>Check-in con código QR</strong>
+          Cada mascota tiene un QR único. El veterinario escanea y confirma en menos de 3 segundos.
+        </div>
+      </div>
+      <div class="app-feature">
+        <div class="af-icon">🔔</div>
+        <div class="af-text">
+          <strong>Recordatorios automáticos</strong>
+          Emails 24h y 2h antes del evento. Menos ausencias, más puntualidad, mejor experiencia.
+        </div>
+      </div>
+      <div class="app-feature">
+        <div class="af-icon">💰</div>
+        <div class="af-text">
+          <strong>Canal de donaciones integrado</strong>
+          Al registrar su mascota, el dueño puede donar a la org. El 100% va a la organización.
+        </div>
+      </div>
+      <div class="app-feature">
+        <div class="af-icon">📊</div>
+        <div class="af-text">
+          <strong>Dashboard en tiempo real</strong>
+          Cupos, ingresos, registros y historial de ferias — todo desde el panel del organizador.
+        </div>
+      </div>
+      <div class="app-feature">
+        <div class="af-icon">🏠</div>
+        <div class="af-text">
+          <strong>Donaciones pasivas para refugios</strong>
+          Un refugio puede recibir donaciones de ferias que otros organizan — sin coordinar nada.
+        </div>
+      </div>
+    </div>
+
+    <!-- ROLES -->
+    <div style="margin-top:1.6rem; font-size:.72rem; font-weight:800; letter-spacing:.1em; text-transform:uppercase; color:rgba(255,255,255,.3); margin-bottom:.7rem;">
+      ✦ Quién usa la plataforma
+    </div>
+    <div class="app-roles">
+      <span class="app-role">🏥 <strong>Organizador</strong> — crea y gestiona campañas</span>
+      <span class="app-role">🩺 <strong>Veterinario</strong> — participa y hace check-in</span>
+      <span class="app-role">🐾 <strong>Dueño de mascota</strong> — registra y paga desde el celular</span>
+      <span class="app-role">🏠 <strong>Refugio / casa cuna</strong> — recibe donaciones activas y pasivas</span>
+    </div>
+
+  </div>
+</div>
+
 <div class="page">
+
+  <!-- ══ BLOQUE 0: QUÉ ES CASTRARCR ══ -->
+  <div class="block">
+    <span class="section-tag tag-blue">¿Qué es CastraCR?</span>
+    <h2>La plataforma que <em>conecta</em> a todos<br/>los actores de una feria de castración.</h2>
+    <p class="lead">
+      CastraCR (castrar.cr) es una plataforma web y móvil construida específicamente para
+      Costa Rica que resuelve el problema operativo de las ferias de castración:
+      coordinación manual, cupos vacíos, no-shows, cobros en efectivo, y la falta de datos para medir impacto.
+      En vez de WhatsApps manuales, hojas de Excel y formularios en papel,
+      CastraCR centraliza todo el proceso — desde que un dueño se entera de la feria
+      hasta que la mascota sale operada y la organización recibe su pago.
+    </p>
+
+    <!-- CÓMO FUNCIONA -->
+    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(210px,1fr)); gap:1rem; margin-bottom:2.2rem;">
+      <div style="background:#fff; border:1px solid var(--border); border-radius:1.25rem; padding:1.5rem; border-top:4px solid var(--brand);">
+        <div style="font-size:1.9rem; margin-bottom:.6rem;">🗓️</div>
+        <div style="font-size:.78rem; font-weight:800; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin-bottom:.5rem;">Antes de la feria</div>
+        <ul style="font-size:.86rem; color:var(--slate); line-height:1.75; padding-left:1.1rem;">
+          <li>Org crea campaña en el dashboard</li>
+          <li>Define fecha, lugar, cupos y precio</li>
+          <li>Dueños se registran y pagan desde el celular o por WhatsApp</li>
+          <li>El sistema gestiona la lista de espera solo</li>
+          <li>Recordatorios automáticos 24h y 2h antes</li>
+        </ul>
+      </div>
+      <div style="background:#fff; border:1px solid var(--border); border-radius:1.25rem; padding:1.5rem; border-top:4px solid var(--green);">
+        <div style="font-size:1.9rem; margin-bottom:.6rem;">🏥</div>
+        <div style="font-size:.78rem; font-weight:800; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin-bottom:.5rem;">Día del evento</div>
+        <ul style="font-size:.86rem; color:var(--slate); line-height:1.75; padding-left:1.1rem;">
+          <li>Check-in con código QR único por mascota</li>
+          <li>Veterinario confirma en menos de 3 segundos</li>
+          <li>Sin papeles, sin listas manuales</li>
+          <li>Historial de la mascota disponible en pantalla</li>
+          <li>Captura de foto por WhatsApp antes del evento</li>
+        </ul>
+      </div>
+      <div style="background:#fff; border:1px solid var(--border); border-radius:1.25rem; padding:1.5rem; border-top:4px solid var(--amber);">
+        <div style="font-size:1.9rem; margin-bottom:.6rem;">📊</div>
+        <div style="font-size:.78rem; font-weight:800; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin-bottom:.5rem;">Después de la feria</div>
+        <ul style="font-size:.86rem; color:var(--slate); line-height:1.75; padding-left:1.1rem;">
+          <li>Dashboard con resumen de ingresos e impacto</li>
+          <li>Transferencia SINPE/IBAN del 90% a la org</li>
+          <li>Donaciones 100% para la organización</li>
+          <li>Historial de ferias y métricas acumuladas</li>
+          <li>Datos para reportes ante aliados o patrocinadores</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- OBJETIVO DETALLADO -->
+    <div style="background:var(--dark); border-radius:1.5rem; padding:2.2rem 2rem; margin-bottom:1.5rem;">
+      <div style="font-size:.72rem; font-weight:800; text-transform:uppercase; letter-spacing:.1em; color:rgba(255,255,255,.35); margin-bottom:1.2rem;">🎯 Objetivo de CastraCR</div>
+      <p style="font-size:1.05rem; color:#fff; font-weight:700; line-height:1.5; margin-bottom:.9rem;">
+        Que ninguna feria de castración vuelva a tener cupos vacíos por falta de coordinación.
+      </p>
+      <p style="font-size:.92rem; color:rgba(255,255,255,.65); line-height:1.75; margin-bottom:1.4rem;">
+        En Costa Rica hay docenas de organizaciones que quieren hacer más ferias pero se frenan
+        por la carga operativa: coordinar por WhatsApp, cobrar en efectivo, lidiar con no-shows,
+        perder cupos, y no tener forma de medir si el esfuerzo sirvió.
+        CastraCR elimina esas fricciones para que el tiempo de las organizaciones se gaste
+        en atender animales — no en administrar listas.
+      </p>
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(185px,1fr)); gap:.85rem;">
+        <div style="background:rgba(16,185,129,.1); border:1px solid rgba(16,185,129,.2); border-radius:1rem; padding:1.1rem;">
+          <div style="font-size:1.3rem; margin-bottom:.45rem;">🐾</div>
+          <div style="font-size:.85rem; color:#6ee7b7; font-weight:700; margin-bottom:.3rem;">Más animales castrados</div>
+          <div style="font-size:.8rem; color:rgba(255,255,255,.5); line-height:1.5;">Ferias llenas al 100% de su capacidad, sin plazas perdidas por no-shows.</div>
+        </div>
+        <div style="background:rgba(6,182,212,.1); border:1px solid rgba(6,182,212,.2); border-radius:1rem; padding:1.1rem;">
+          <div style="font-size:1.3rem; margin-bottom:.45rem;">⚡</div>
+          <div style="font-size:.85rem; color:#67e8f9; font-weight:700; margin-bottom:.3rem;">Menos trabajo manual</div>
+          <div style="font-size:.8rem; color:rgba(255,255,255,.5); line-height:1.5;">Sin listas en Excel ni WhatsApps de confirmación. El sistema lo gestiona solo.</div>
+        </div>
+        <div style="background:rgba(245,158,11,.1); border:1px solid rgba(245,158,11,.2); border-radius:1rem; padding:1.1rem;">
+          <div style="font-size:1.3rem; margin-bottom:.45rem;">💰</div>
+          <div style="font-size:.85rem; color:#fcd34d; font-weight:700; margin-bottom:.3rem;">Ingresos predecibles</div>
+          <div style="font-size:.8rem; color:rgba(255,255,255,.5); line-height:1.5;">Cobro anticipado garantiza el flujo de caja. Donaciones adicionales sin esfuerzo extra.</div>
+        </div>
+        <div style="background:rgba(139,92,246,.1); border:1px solid rgba(139,92,246,.2); border-radius:1rem; padding:1.1rem;">
+          <div style="font-size:1.3rem; margin-bottom:.45rem;">📈</div>
+          <div style="font-size:.85rem; color:#c4b5fd; font-weight:700; margin-bottom:.3rem;">Impacto medible</div>
+          <div style="font-size:.8rem; color:rgba(255,255,255,.5); line-height:1.5;">Datos reales de ferias, animales atendidos y reducción de población callejera.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- METAS A 12 MESES -->
+    <div style="background:#f0fdf4; border:2px solid #86efac; border-radius:1.5rem; padding:2rem 1.8rem; margin-bottom:1.5rem;">
+      <div style="font-size:.72rem; font-weight:800; text-transform:uppercase; letter-spacing:.1em; color:#065f46; margin-bottom:1.3rem;">🏁 Metas a 12 meses</div>
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:1rem; margin-bottom:1.5rem;">
+        <div style="text-align:center;">
+          <div style="font-size:2.2rem; font-weight:800; color:var(--green-dark); line-height:1;">10+</div>
+          <div style="font-size:.8rem; color:#047857; margin-top:.3rem; line-height:1.4;">organizaciones activas<br/>en la plataforma</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-size:2.2rem; font-weight:800; color:var(--green-dark); line-height:1;">60+</div>
+          <div style="font-size:.8rem; color:#047857; margin-top:.3rem; line-height:1.4;">ferias gestionadas<br/>en el primer año</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-size:2.2rem; font-weight:800; color:var(--green-dark); line-height:1;">3,000+</div>
+          <div style="font-size:.8rem; color:#047857; margin-top:.3rem; line-height:1.4;">mascotas castradas<br/>con registro digital</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-size:2.2rem; font-weight:800; color:var(--green-dark); line-height:1;">5+</div>
+          <div style="font-size:.8rem; color:#047857; margin-top:.3rem; line-height:1.4;">refugios con canal<br/>de donaciones activo</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-size:2.2rem; font-weight:800; color:var(--green-dark); line-height:1;">95%</div>
+          <div style="font-size:.8rem; color:#047857; margin-top:.3rem; line-height:1.4;">tasa de ocupación<br/>promedio por feria</div>
+        </div>
+      </div>
+      <p style="font-size:.83rem; color:#047857; line-height:1.65; border-top:1px solid #86efac; padding-top:1rem; margin:0;">
+        Estas metas se traducen en un impacto real: si cada feria castró un promedio de 50 animales,
+        3,000 castraciones significan <strong>~60 ferias completas</strong> — y en términos de reproducción contenida,
+        potencialmente más de <strong>500,000 descendientes no nacidos</strong> en los siguientes 5 años.
+      </p>
+    </div>
+
+    <!-- BENEFICIOS POR ACTOR -->
+    <div style="margin-top:2rem;">
+      <div style="font-size:.72rem; font-weight:800; text-transform:uppercase; letter-spacing:.1em; color:var(--muted); margin-bottom:1.1rem;">✦ Beneficios concretos para cada actor</div>
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:1rem;">
+
+        <div style="background:#fff; border:1px solid var(--border); border-radius:1.25rem; padding:1.5rem; border-left:4px solid var(--green);">
+          <div style="font-size:1.7rem; margin-bottom:.5rem;">🏥</div>
+          <div style="font-size:.9rem; font-weight:800; color:var(--dark); margin-bottom:.7rem;">Organizaciones rescatistas</div>
+          <ul style="font-size:.83rem; color:var(--muted); line-height:1.8; padding-left:1.1rem;">
+            <li>Dashboard completo para gestionar campañas</li>
+            <li>Sin trabajo manual de coordinación por WhatsApp</li>
+            <li>Pago anticipado → cero problemas de flujo de caja</li>
+            <li>Canal de donaciones integrado sin trabajo extra</li>
+            <li>Historial de ferias y métricas exportables</li>
+            <li>3 ferias gratis al iniciar (plan Libre)</li>
+          </ul>
+        </div>
+
+        <div style="background:#fff; border:1px solid var(--border); border-radius:1.25rem; padding:1.5rem; border-left:4px solid var(--brand);">
+          <div style="font-size:1.7rem; margin-bottom:.5rem;">🐾</div>
+          <div style="font-size:.9rem; font-weight:800; color:var(--dark); margin-bottom:.7rem;">Dueños de mascotas</div>
+          <ul style="font-size:.83rem; color:var(--muted); line-height:1.8; padding-left:1.1rem;">
+            <li>Encuentran ferias cercanas sin buscar en redes</li>
+            <li>Registro por WhatsApp en minutos (IA 24/7)</li>
+            <li>Pago seguro desde el celular (OnvoPay)</li>
+            <li>Recordatorios automáticos para no olvidar</li>
+            <li>Historial de todas sus mascotas en un solo lugar</li>
+            <li>Opción de donar al momento del registro</li>
+          </ul>
+        </div>
+
+        <div style="background:#fff; border:1px solid var(--border); border-radius:1.25rem; padding:1.5rem; border-left:4px solid var(--purple);">
+          <div style="font-size:1.7rem; margin-bottom:.5rem;">🩺</div>
+          <div style="font-size:.9rem; font-weight:800; color:var(--dark); margin-bottom:.7rem;">Veterinarios</div>
+          <ul style="font-size:.83rem; color:var(--muted); line-height:1.8; padding-left:1.1rem;">
+            <li>Check-in ágil con QR — sin papeles ni listas</li>
+            <li>Acceso al historial y foto de la mascota previo</li>
+            <li>Saben exactamente cuántas mascotas llegan</li>
+            <li>Sin sorpresas ni no-shows de último momento</li>
+            <li>Pueden unirse a múltiples campañas desde su perfil</li>
+          </ul>
+        </div>
+
+        <div style="background:#fff; border:1px solid var(--border); border-radius:1.25rem; padding:1.5rem; border-left:4px solid var(--amber);">
+          <div style="font-size:1.7rem; margin-bottom:.5rem;">🏠</div>
+          <div style="font-size:.9rem; font-weight:800; color:var(--dark); margin-bottom:.7rem;">Refugios y casas cunas</div>
+          <ul style="font-size:.83rem; color:var(--muted); line-height:1.8; padding-left:1.1rem;">
+            <li>Reciben donaciones de ferias que otros organizan</li>
+            <li>Sin tener que coordinar nada — ingreso pasivo</li>
+            <li>100% de las donaciones va a la organización</li>
+            <li>Visibilidad en la plataforma ante donantes</li>
+            <li>Descuento ONG del 30% en planes pagados</li>
+          </ul>
+        </div>
+
+      </div>
+    </div>
+  </div>
+  <hr class="div"/>
 
   <!-- ══ BLOQUE A: SOBREPOBLACIÓN ══ -->
   <div class="block">
