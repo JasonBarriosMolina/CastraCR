@@ -56,6 +56,13 @@ export class DataStack extends cdk.Stack {
       projectionType: dynamodb.ProjectionType.ALL,
     });
 
+    // GSI_POSTOP: date-bucket → post-op follow-ups due today
+    this.table.addGlobalSecondaryIndex({
+      indexName: 'GSI_POSTOP',
+      partitionKey: { name: 'POSTOP_DUE_DATE', type: dynamodb.AttributeType.STRING },
+      projectionType: dynamodb.ProjectionType.ALL,
+    });
+
     new cdk.CfnOutput(this, 'TableName', { value: this.table.tableName });
     new cdk.CfnOutput(this, 'TableArn', { value: this.table.tableArn });
   }

@@ -97,10 +97,12 @@ export class ApiStack extends cdk.Stack {
     props.photosBucket.grantPut(petUploadUrl);
 
     // Registrations
-    const regCreate = fn('RegCreate', 'api/registrations/create.ts');
-    const regGet    = fn('RegGet',    'api/registrations/get.ts');
-    const regList   = fn('RegList',   'api/registrations/list.ts');
-    const regCancel = fn('RegCancel', 'api/registrations/cancel.ts');
+    const regCreate         = fn('RegCreate',         'api/registrations/create.ts');
+    const regGet            = fn('RegGet',            'api/registrations/get.ts');
+    const regList           = fn('RegList',           'api/registrations/list.ts');
+    const regCancel         = fn('RegCancel',         'api/registrations/cancel.ts');
+    const regGetExpediente  = fn('RegGetExpediente',  'api/registrations/get-expediente.ts');
+    const regUpdExpediente  = fn('RegUpdExpediente',  'api/registrations/update-expediente.ts');
 
     // Check-in
     const checkinScan = fn('CheckinScan', 'api/checkin/scan.ts');
@@ -148,8 +150,10 @@ export class ApiStack extends cdk.Stack {
     const monthlyClose   = fn('MonthlyClose',   'events/monthly-close/handler.ts',  {}, cdk.Duration.minutes(5), 512);
     const notifyWaitlist = fn('NotifyWaitlist', 'events/notify-waitlist/handler.ts',{}, cdk.Duration.seconds(30));
     const releaseSlots   = fn('ReleaseSlots',   'events/release-slots/handler.ts');
-    const reminder24h    = fn('Reminder24h',    'events/reminder-24h/handler.ts',   {}, cdk.Duration.seconds(30));
-    const reminder2h     = fn('Reminder2h',     'events/reminder-2h/handler.ts',    {}, cdk.Duration.seconds(30));
+    const reminder24h       = fn('Reminder24h',       'events/reminder-24h/handler.ts',         {}, cdk.Duration.seconds(30));
+    const reminder2h        = fn('Reminder2h',        'events/reminder-2h/handler.ts',          {}, cdk.Duration.seconds(30));
+    const postopInit        = fn('PostopInit',        'events/reminder-postop-init/handler.ts',     {}, cdk.Duration.seconds(60), 512);
+    const postopFollowup    = fn('PostopFollowup',    'events/reminder-postop-followup/handler.ts', {}, cdk.Duration.seconds(60), 512);
 
     // SES permissions for email senders
     const sesPerm = new iam.PolicyStatement({
@@ -200,6 +204,20 @@ export class ApiStack extends cdk.Stack {
       ruleName: `castrar-cr-${props.appEnv}-reminder-2h`,
       schedule: events.Schedule.rate(cdk.Duration.minutes(15)),
       targets: [new targets.LambdaFunction(reminder2h)],
+    });
+
+    new events.Rule(this, 'PostopInitRule', {
+      ruleName: `castrar-cr-${props.appEnv}-postop-init`,
+      description: 'Detecta campañas finalizadas y envía WhatsApp de instrucciones nocturnas + agenda follow-ups',
+      schedule: events.Schedule.rate(cdk.Duration.minutes(15)),
+      targets: [new targets.LambdaFunction(postopInit)],
+    });
+
+    new events.Rule(this, 'PostopFollowupRule', {
+      ruleName: `castrar-cr-${props.appEnv}-postop-followup`,
+      description: 'Envía mensajes de seguimiento post-op en días 1, 3, 7 y 15',
+      schedule: events.Schedule.rate(cdk.Duration.minutes(30)),
+      targets: [new targets.LambdaFunction(postopFollowup)],
     });
 
     // ─── HTTP API Gateway ──────────────────────────────────────────────────────
@@ -254,7 +272,9 @@ export class ApiStack extends cdk.Stack {
     api.addRoutes({ path: '/registrations',              methods: [apigwv2.HttpMethod.POST], integration: int(regCreate), ...withAuth });
     api.addRoutes({ path: '/registrations',              methods: [apigwv2.HttpMethod.GET],  integration: int(regList),   ...withAuth });
     api.addRoutes({ path: '/registrations/{id}',         methods: [apigwv2.HttpMethod.GET],  integration: int(regGet),    ...withAuth });
-    api.addRoutes({ path: '/registrations/{id}/cancel',  methods: [apigwv2.HttpMethod.POST], integration: int(regCancel), ...withAuth });
+    api.addRoutes({ path: '/registrations/{id}/cancel',          methods: [apigwv2.HttpMethod.POST],  integration: int(regCancel),        ...withAuth });
+    api.addRoutes({ path: '/registrations/{regId}/expediente',   methods: [apigwv2.HttpMethod.GET],   integration: int(regGetExpediente), ...withAuth });
+    api.addRoutes({ path: '/registrations/{regId}/expediente',   methods: [apigwv2.HttpMethod.PATCH], integration: int(regUpdExpediente), ...withAuth });
 
     // Check-in
     api.addRoutes({ path: '/checkin/scan', methods: [apigwv2.HttpMethod.POST], integration: int(checkinScan), ...withAuth });
