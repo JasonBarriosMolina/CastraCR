@@ -8,13 +8,56 @@ import { generateQRToken } from '@castrar-cr/utils';
 import { NotFoundError } from '@castrar-cr/utils';
 import type { CreateRegistrationInput } from '@castrar-cr/types';
 
+async function persistScreeningData(
+  petId: string,
+  screening: NonNullable<CreateRegistrationInput['petScreeningData']>[string],
+  now: string,
+): Promise<void> {
+  const fields: Record<string, unknown> = {};
+  const names: Record<string, string> = {};
+  const values: Record<string, unknown> = { ':now': now };
+  const sets: string[] = ['updatedAt = :now'];
+
+  const map: Record<string, keyof typeof screening> = {
+    '#va': 'vacunasAlDia',
+    '#ta': 'tratamientosActivos',
+    '#cr': 'criptorquidismo',
+    '#er': 'estadoReproductivo',
+    '#ac': 'aptoCirugia',
+    '#rr': 'razonRechazo',
+    '#av': 'alertasVet',
+    '#sa': 'screenedAt',
+    '#pr': 'provincia',
+  };
+
+  for (const [alias, key] of Object.entries(map)) {
+    const val = screening[key];
+    if (val !== undefined) {
+      names[alias] = key;
+      values[`:${key}`] = val;
+      sets.push(`${alias} = :${key}`);
+      fields[key] = val;
+    }
+  }
+
+  if (sets.length <= 1) return; // nada que actualizar
+
+  await ddb.send(new UpdateCommand({
+    TableName: TABLE_NAME,
+    Key: { PK: `PET#${petId}`, SK: 'METADATA' },
+    UpdateExpression: `SET ${sets.join(', ')}`,
+    ExpressionAttributeNames: names,
+    ExpressionAttributeValues: values,
+  }));
+}
+
 export const handler: APIGatewayProxyHandlerV2WithJWTAuthorizer = async (event) => {
   try {
     const authCtx = getAuthContext(event);
     requireRole(authCtx, 'Dueno', 'SuperAdmin');
 
     const body = JSON.parse(event.body ?? '{}') as CreateRegistrationInput;
-    const { campaignId, slotId, venueId, petIds } = body;
+    const { campaignId, slotId, venueId, petIds, petScreeningData } = body;
 
     if (!campaignId || !slotId || !venueId || !petIds?.length) {
       return { statusCode: 400, body: JSON.stringify({ error: 'campaignId, slotId, venueId y petIds son requeridos', code: 'INVALID_BODY' }) };
@@ -71,11 +114,16 @@ export const handler: APIGatewayProxyHandlerV2WithJWTAuthorizer = async (event) 
     const qrToken = generateQRToken();
     const now = new Date().toISOString();
 
-    const petSummaries = pets.map((p) => ({
-      petId: p['petId'] as string,
-      nombre: p['nombre'] as string,
-      estadoCirugia: 'pendiente',
-    }));
+    const petSummaries = pets.map((p) => {
+      const petId = p['petId'] as string;
+      const screening = petScreeningData?.[petId];
+      return {
+        petId,
+        nombre: p['nombre'] as string,
+        estadoCirugia: 'pendiente',
+        alertasVet: screening?.alertasVet ?? (p['alertasVet'] as string[] | undefined),
+      };
+    });
 
     await ddb.send(new PutCommand({
       TableName: TABLE_NAME,
@@ -100,9 +148,18 @@ export const handler: APIGatewayProxyHandlerV2WithJWTAuthorizer = async (event) 
       ConditionExpression: 'attribute_not_exists(PK)',
     }));
 
-    // 5. Create QR token lookup item (enables O(1) check-in by QR)
+    // 5. Persistir datos de screening en cada pet record (si vienen del bot)
+    if (petScreeningData) {
+      await Promise.all(
+        Object.entries(petScreeningData).map(([petId, screening]) =>
+          persistScreeningData(petId, screening, now),
+        ),
+      );
+    }
+
+    // 6. Create QR token lookup item (enables O(1) check-in by QR)
     if (registrationStatus === 'confirmada') {
-      await ddb.send(new PutCommand({
+        await ddb.send(new PutCommand({
         TableName: TABLE_NAME,
         Item: {
           PK: `QR#${qrToken}`,

@@ -36,6 +36,16 @@ export const handler: APIGatewayProxyHandlerV2WithJWTAuthorizer = async (event) 
       condicionSalud: body.condicionSalud,
       vacunas: body.vacunas ?? [],
       fotosS3Keys: body.fotosS3Keys ?? [],
+      // Campos de screening médico (opcionales — se rellenan desde el bot)
+      vacunasAlDia: body.vacunasAlDia,
+      tratamientosActivos: body.tratamientosActivos,
+      criptorquidismo: body.criptorquidismo,
+      estadoReproductivo: body.estadoReproductivo,
+      aptoCirugia: body.aptoCirugia,
+      razonRechazo: body.razonRechazo,
+      alertasVet: body.alertasVet,
+      screenedAt: body.screenedAt,
+      provincia: body.provincia,
       // GSI3: per-user index
       GSI3PK: `USER#${authCtx.userId}`,
       GSI3SK: `PET#${petId}`,
