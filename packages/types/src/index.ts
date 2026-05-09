@@ -9,16 +9,36 @@ export type {
   TipoAnimal,
   Especie,
 } from './campaign.js';
-export type { PetProfile, PetSpecies, PetSex, SurgeryStatus, RegistrationPet } from './pet.js';
+export type { PetProfile, PetSpecies, PetSex, SurgeryStatus, RegistrationPet, EstadoReproductivo as PetEstadoReproductivo } from './pet.js';
 export type {
   Registration,
   RegistrationStatus,
   RegistrationPetSummary,
   CreateRegistrationInput,
+  ExpedienteClinico,
+  ExpedienteRecepcion,
+  ExpedientePreOp,
+  ExpedienteIntraOp,
+  ExpedienteEgreso,
+  PostOpSeguimientoEntry,
+  UpdateExpedienteInput,
+  FaseExpediente,
+  TipoProcedimiento,
+  CondicionEgreso,
 } from './registration.js';
 export type { Donation, DonationType, DonationStatus, CreateDonationInput } from './donation.js';
 export type { Organization, OrgPlan, OrgStatus } from './organization.js';
 export { PLAN_PRICES, DONATION_SPLIT_RATIO } from './organization.js';
 export type { Vet, VetStatus } from './vet.js';
-export type { ConversationState, ConversationStep } from './whatsapp.js';
+export type {
+  ConversationState,
+  ConversationStep,
+  DatosRegistro,
+  EstadoReproductivo,
+  NivelPostOp,
+  ModoConversacion,
+  ElegibilidadResult,
+  EstadoReproductivoResult,
+  PostOpEvaluacionResult,
+} from './whatsapp.js';
 export type { ApiResponse, ApiError, PaginatedResponse } from './api.js';
