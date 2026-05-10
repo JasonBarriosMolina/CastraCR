@@ -710,6 +710,107 @@ export default function AdminCampaignDetailPage() {
           <p className="text-sm text-gray-400">No hay veterinarios asignados.</p>
         )}
       </section>
+
+      {/* ── Costos IA ───────────────────────────────────────────────────── */}
+      <section className="space-y-4">
+        <h2 className="text-xl font-bold text-gray-900">💰 Costos IA & Mensajería</h2>
+        <CostWidget campaignId={id} />
+      </section>
+    </div>
+  );
+}
+
+// ── Cost Widget ───────────────────────────────────────────────────────────────
+
+interface CostSummary {
+  haikuCalls: number;
+  haikuInputTokens: number;
+  haikuOutputTokens: number;
+  twilioMessages: number;
+  totalUsd: number;
+  actualizadoEn: string;
+}
+
+function CostWidget({ campaignId }: { campaignId: string }) {
+  const [costs, setCosts] = useState<CostSummary | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const API = process.env['NEXT_PUBLIC_API_URL'] ?? '';
+    const token = typeof window !== 'undefined'
+      ? (window as unknown as Record<string, unknown>)['__authToken__'] as string | undefined
+      : undefined;
+
+    fetch(`${API}/campaigns/${campaignId}/costs`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    })
+      .then(r => r.json())
+      .then((d: { costs: CostSummary }) => setCosts(d.costs))
+      .catch(() => null)
+      .finally(() => setLoading(false));
+  }, [campaignId]);
+
+  if (loading) {
+    return (
+      <div className="bg-white border rounded-2xl p-5 animate-pulse">
+        <div className="h-4 bg-gray-200 rounded w-1/2 mb-3" />
+        <div className="h-8 bg-gray-100 rounded w-1/4" />
+      </div>
+    );
+  }
+
+  if (!costs) {
+    return (
+      <div className="bg-white border rounded-2xl p-5">
+        <p className="text-sm text-gray-400">Sin datos de costo disponibles.</p>
+      </div>
+    );
+  }
+
+  const haikuUsd = ((costs.haikuInputTokens / 1_000_000) * 0.80 + (costs.haikuOutputTokens / 1_000_000) * 4.00);
+  const twilioUsd = costs.twilioMessages * 0.005;
+
+  return (
+    <div className="bg-white border rounded-2xl p-5 space-y-4">
+      <div className="flex items-center justify-between">
+        <p className="text-2xl font-bold text-gray-900">
+          ${costs.totalUsd.toFixed(4)} <span className="text-base font-normal text-gray-500">USD total</span>
+        </p>
+        <span className="text-xs text-gray-400">
+          Actualizado {costs.actualizadoEn ? new Date(costs.actualizadoEn).toLocaleTimeString('es-CR') : '—'}
+        </span>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div className="bg-purple-50 rounded-xl p-4">
+          <p className="text-xs font-semibold text-purple-600 uppercase mb-1">Claude Haiku</p>
+          <p className="text-xl font-bold text-purple-800">{costs.haikuCalls} llamadas</p>
+          <p className="text-xs text-purple-600 mt-1">
+            {(costs.haikuInputTokens / 1000).toFixed(1)}k in · {(costs.haikuOutputTokens / 1000).toFixed(1)}k out tokens
+          </p>
+          <p className="text-sm font-semibold text-purple-700 mt-2">${haikuUsd.toFixed(4)}</p>
+        </div>
+
+        <div className="bg-green-50 rounded-xl p-4">
+          <p className="text-xs font-semibold text-green-600 uppercase mb-1">WhatsApp (Twilio)</p>
+          <p className="text-xl font-bold text-green-800">{costs.twilioMessages} mensajes</p>
+          <p className="text-xs text-green-600 mt-1">~$0.005 por mensaje</p>
+          <p className="text-sm font-semibold text-green-700 mt-2">${twilioUsd.toFixed(4)}</p>
+        </div>
+      </div>
+
+      {costs.totalUsd < 0.20 && (
+        <div className="flex items-center gap-2 text-green-700 text-sm font-medium">
+          <span aria-hidden="true">✅</span>
+          Dentro del presupuesto estimado (&lt;$0.20 / campaña)
+        </div>
+      )}
+      {costs.totalUsd >= 0.20 && (
+        <div role="alert" className="flex items-center gap-2 text-amber-700 text-sm font-medium">
+          <span aria-hidden="true">⚠️</span>
+          Costo supera el estimado de $0.20 / campaña
+        </div>
+      )}
     </div>
   );
 }

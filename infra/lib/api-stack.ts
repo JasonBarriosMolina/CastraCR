@@ -119,6 +119,9 @@ export class ApiStack extends cdk.Stack {
     const vetApprove  = fn('VetApprove',  'api/vets/approve.ts');
     const vetList     = fn('VetList',     'api/vets/list.ts');
 
+    // Campaign costs tracker
+    const campaignCosts = fn('CampaignCosts', 'api/campaigns/costs.ts');
+
     // Admin campaigns
     const adminCampaignList    = fn('AdminCampaignList',    'api/admin/campaigns/list.ts');
     const adminCampaignUpdate  = fn('AdminCampaignUpdate',  'api/admin/campaigns/update.ts');
@@ -278,6 +281,9 @@ export class ApiStack extends cdk.Stack {
 
     // Check-in
     api.addRoutes({ path: '/checkin/scan', methods: [apigwv2.HttpMethod.POST], integration: int(checkinScan), ...withAuth });
+
+    // Campaign costs
+    api.addRoutes({ path: '/campaigns/{id}/costs', methods: [apigwv2.HttpMethod.GET, apigwv2.HttpMethod.POST], integration: int(campaignCosts), ...withAuth });
 
     // Donations
     api.addRoutes({ path: '/donations', methods: [apigwv2.HttpMethod.POST], integration: int(donationIntent), ...withAuth });
