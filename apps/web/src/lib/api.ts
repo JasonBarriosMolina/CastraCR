@@ -109,3 +109,50 @@ export async function listMyDonations(): Promise<Donation[]> {
   const result = await apiFetch<{ donations: Donation[] }>('/donations');
   return result.donations;
 }
+
+// Screening de mascotas
+export interface ScreeningResult {
+  nombre?: string;
+  especie?: string;
+  sexo?: string;
+  pesoKg?: number;
+  edadMeses?: number;
+  condicionSaludRaw?: string;
+  vacunasAlDia?: boolean;
+  tratamientosActivos?: string;
+  estadoReproductivo?: string;
+  criptorquidismo?: boolean;
+  aptoCirugia: boolean;
+  razonRechazo?: string;
+  alertasVet: string[];
+}
+
+export interface ScreeningAudioResponse {
+  extracted: ScreeningResult;
+  aptoCirugia: boolean;
+  alertasVet: string[];
+  razonRechazo?: string;
+}
+
+export async function submitScreeningAudio(
+  petId: string,
+  audioBlob: Blob,
+  petContext?: { nombre?: string; especie?: string; sexo?: string },
+): Promise<ScreeningAudioResponse> {
+  // Convertir blob a base64
+  const arrayBuffer = await audioBlob.arrayBuffer();
+  const uint8 = new Uint8Array(arrayBuffer);
+  let binary = '';
+  for (let i = 0; i < uint8.length; i++) binary += String.fromCharCode(uint8[i]!);
+  const audioBase64 = btoa(binary);
+
+  const result = await apiFetch<ScreeningAudioResponse>(`/pets/${petId}/screening-audio`, {
+    method: 'POST',
+    body: JSON.stringify({
+      audioBase64,
+      mediaType: audioBlob.type || 'audio/webm',
+      ...petContext,
+    }),
+  });
+  return result;
+}

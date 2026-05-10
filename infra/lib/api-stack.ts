@@ -91,8 +91,9 @@ export class ApiStack extends cdk.Stack {
     const petCreate      = fn('PetCreate',      'api/pets/create.ts');
     const petGet         = fn('PetGet',         'api/pets/get.ts');
     const petList        = fn('PetList',        'api/pets/list.ts');
-    const petUploadUrl   = fn('PetUploadUrl',   'api/pets/upload-url.ts');
-    const petUpdatePhoto = fn('PetUpdatePhoto', 'api/pets/update-photo.ts');
+    const petUploadUrl      = fn('PetUploadUrl',      'api/pets/upload-url.ts');
+    const petUpdatePhoto    = fn('PetUpdatePhoto',    'api/pets/update-photo.ts');
+    const petScreeningAudio = fn('PetScreeningAudio', 'api/pets/screening-audio.ts', {}, cdk.Duration.seconds(30), 512);
     // S3 pre-signed URL: Lambda must have putObject permission
     props.photosBucket.grantPut(petUploadUrl);
 
@@ -268,8 +269,9 @@ export class ApiStack extends cdk.Stack {
     api.addRoutes({ path: '/pets',                     methods: [apigwv2.HttpMethod.POST],  integration: int(petCreate),      ...withAuth });
     api.addRoutes({ path: '/pets',                     methods: [apigwv2.HttpMethod.GET],   integration: int(petList),        ...withAuth });
     api.addRoutes({ path: '/pets/{id}',                methods: [apigwv2.HttpMethod.GET],   integration: int(petGet),         ...withAuth });
-    api.addRoutes({ path: '/pets/{petId}/upload-url',  methods: [apigwv2.HttpMethod.POST],  integration: int(petUploadUrl),   ...withAuth });
-    api.addRoutes({ path: '/pets/{petId}/photo',       methods: [apigwv2.HttpMethod.PUT],   integration: int(petUpdatePhoto), ...withAuth });
+    api.addRoutes({ path: '/pets/{petId}/upload-url',       methods: [apigwv2.HttpMethod.POST],  integration: int(petUploadUrl),       ...withAuth });
+    api.addRoutes({ path: '/pets/{petId}/photo',            methods: [apigwv2.HttpMethod.PUT],   integration: int(petUpdatePhoto),     ...withAuth });
+    api.addRoutes({ path: '/pets/{petId}/screening-audio',  methods: [apigwv2.HttpMethod.POST],  integration: int(petScreeningAudio),  ...withAuth });
 
     // Registrations
     api.addRoutes({ path: '/registrations',              methods: [apigwv2.HttpMethod.POST], integration: int(regCreate), ...withAuth });

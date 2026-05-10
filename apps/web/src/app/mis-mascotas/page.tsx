@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import Link from 'next/link';
 import { listMyPets, createPet, getUploadUrl, updatePetPhoto } from '@/lib/api';
 import type { PetProfile, PetSpecies, PetSex } from '@castrar-cr/types';
 
@@ -277,6 +278,32 @@ export default function MisMascotasPage() {
                       <div className="mt-2 bg-amber-50 rounded-xl px-3 py-2 text-xs text-amber-700">
                         {pet.condicionSalud}
                       </div>
+                    )}
+                  </div>
+
+                  {/* Botón de pre-evaluación médica */}
+                  <div className="mt-4 pt-3 border-t border-slate-100">
+                    {(pet as Record<string, unknown>)['screenedAt'] ? (
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-green-600 font-semibold flex items-center gap-1">
+                          <span aria-hidden="true">✅</span> Pre-evaluación completa
+                        </span>
+                        <Link
+                          href={`/mis-mascotas/${pet.petId}/screening`}
+                          className="text-xs text-brand-600 font-semibold underline underline-offset-2 hover:text-brand-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 rounded"
+                          aria-label={`Actualizar pre-evaluación de ${pet.nombre}`}
+                        >
+                          Actualizar
+                        </Link>
+                      </div>
+                    ) : (
+                      <Link
+                        href={`/mis-mascotas/${pet.petId}/screening`}
+                        className="flex items-center justify-center gap-2 w-full bg-brand-600 text-white py-3 rounded-xl font-semibold text-sm hover:bg-brand-700 transition-colors min-h-[44px] focus:outline-none focus-visible:ring-4 focus-visible:ring-brand-400"
+                        aria-label={`Completar pre-evaluación médica de ${pet.nombre}`}
+                      >
+                        🩺 Completar pre-evaluación médica
+                      </Link>
                     )}
                   </div>
                 </div>
