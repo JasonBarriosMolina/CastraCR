@@ -7,7 +7,7 @@ import { AuthGuard } from '@/components/AuthGuard';
 
 export function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const isLoginPage = pathname === '/login';
+  const isLoginPage = pathname === '/login' || pathname.startsWith('/login');
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   if (isLoginPage) {
