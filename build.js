@@ -17,13 +17,14 @@ console.log(`[build.js] Proyecto: ${project} → filter: ${filter}`);
 
 execSync(`npx turbo run build --filter=${filter}`, { stdio: 'inherit' });
 
-// Copiar .next al root para que Vercel lo detecte (outputDirectory: ".next")
+// Crear symlink .next → apps/{app}/.next
+// (symlink preserva rutas absolutas en build traces, cpSync las rompe)
 const src  = path.join(__dirname, appDir, '.next');
 const dest = path.join(__dirname, '.next');
 
 if (existsSync(src)) {
-  console.log(`[build.js] Copiando ${src} → ${dest}`);
-  cpSync(src, dest, { recursive: true });
+  console.log(`[build.js] Symlinking ${dest} → ${src}`);
+  execSync(`ln -sfn ${src} ${dest}`, { stdio: 'inherit' });
 } else {
   console.error(`[build.js] ERROR: no encontré .next en ${src}`);
   process.exit(1);
