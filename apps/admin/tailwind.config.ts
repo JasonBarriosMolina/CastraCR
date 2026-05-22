@@ -10,11 +10,12 @@ const config: Config = {
     extend: {
       colors: {
         brand: {
-          50: '#fdf4ff',
-          100: '#fae8ff',
-          500: '#a855f7',
-          600: '#9333ea',
-          700: '#7e22ce',
+          50:  '#ecfeff',
+          100: '#cffafe',
+          200: '#a5f3fc',
+          500: '#06b6d4',
+          600: '#0891b2',
+          700: '#0e7490',
         },
       },
     },

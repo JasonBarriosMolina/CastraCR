@@ -1,5 +1,6 @@
 import type { APIGatewayProxyHandlerV2 } from 'aws-lambda';
 import { GetCommand, PutCommand, UpdateCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
+import { randomUUID } from 'crypto';
 import Anthropic from '@anthropic-ai/sdk';
 import twilio from 'twilio';
 import { ddb, TABLE_NAME } from '../../shared/db.js';
@@ -330,6 +331,131 @@ interface StepResult {
   reply: string;
   nextState: ConversationState['estado'];
   datosUpdate?: Partial<DatosRegistro>;
+  /** Actualizaciones a campos top-level del estado (campaignId, slotId, venueId, etc.) */
+  stateUpdate?: Partial<Pick<ConversationState, 'campaignId' | 'slotId' | 'venueId' | 'regId' | 'petId'>>;
+}
+
+// ─────────────────────────────────────────────
+// CREAR REGISTRO DESDE BOT
+// ─────────────────────────────────────────────
+
+async function crearRegistracionDesdeBot(
+  state: ConversationState,
+): Promise<{ regId: string; qrToken: string } | { error: string }> {
+  const { campaignId, slotId, venueId, datos, telefono } = state;
+  if (!campaignId || !slotId) return { error: 'Faltan datos de campaña o turno' };
+
+  // userId virtual basado en teléfono (puede ser reclamado por el usuario real después)
+  const rawPhone = telefono.replace('whatsapp:', '').replace('+', '');
+  const botUserId = `WA_${rawPhone}`;
+
+  // Obtener metadata de la campaña para validar y obtener venueId si falta
+  const campaignItem = await ddb.send(new GetCommand({
+    TableName: TABLE_NAME,
+    Key: { PK: `CAMPAIGN#${campaignId}`, SK: 'METADATA' },
+  }));
+  if (!campaignItem.Item) return { error: 'Campaña no encontrada' };
+  const campaign = campaignItem.Item;
+
+  const resolvedVenueId = venueId
+    ?? (campaign['venues'] as { venueId: string }[] | undefined)?.[0]?.venueId
+    ?? 'default';
+
+  // Generar IDs
+  const petId = randomUUID();
+  const regId = randomUUID();
+  const qrToken = randomUUID();
+  const now = new Date().toISOString();
+
+  // 1. Decrementar slot atómicamente — si no hay cupos → lista de espera
+  let enListaEspera = false;
+  try {
+    await ddb.send(new UpdateCommand({
+      TableName: TABLE_NAME,
+      Key: { PK: `CAMPAIGN#${campaignId}`, SK: `SLOT#${slotId}#AVAIL` },
+      UpdateExpression: 'SET cuposDisponibles = cuposDisponibles - :one',
+      ConditionExpression: 'cuposDisponibles > :zero',
+      ExpressionAttributeValues: { ':one': 1, ':zero': 0 },
+    }));
+  } catch {
+    enListaEspera = true;
+  }
+
+  // 2. Crear perfil de mascota
+  await ddb.send(new PutCommand({
+    TableName: TABLE_NAME,
+    Item: {
+      PK: `PET#${petId}`,
+      SK: 'METADATA',
+      petId,
+      userId: botUserId,
+      nombre: datos.nombre ?? 'Sin nombre',
+      especie: datos.especie ?? 'otro',
+      sexo: datos.sexo ?? 'macho',
+      pesoKg: datos.pesoKg,
+      edadMeses: datos.edadMeses,
+      condicionSaludRaw: datos.condicionSaludRaw,
+      vacunasAlDia: datos.vacunasAlDia,
+      tratamientosActivos: datos.tratamientosActivos,
+      estadoReproductivo: datos.estadoReproductivo,
+      criptorquidismo: datos.criptorquidismo,
+      aptoCirugia: datos.aptoCirugia ?? true,
+      razonRechazo: datos.razonRechazo,
+      alertasVet: datos.alertasVet ?? [],
+      screenedAt: now,
+      provincia: datos.provincia,
+      creadoViaBot: true,
+      telefonoBot: rawPhone,
+      creadoEn: now,
+    },
+  }));
+
+  // 3. Crear registro
+  const estado = enListaEspera ? 'lista_espera' : 'confirmada';
+  await ddb.send(new PutCommand({
+    TableName: TABLE_NAME,
+    Item: {
+      PK: `REG#${regId}`,
+      SK: 'METADATA',
+      regId,
+      campaignId,
+      slotId,
+      venueId: resolvedVenueId,
+      userId: botUserId,
+      estado,
+      qrToken,
+      checkedIn: false,
+      creadoViaBot: true,
+      telefonoBot: rawPhone,
+      petSummaries: [{
+        petId,
+        nombre: datos.nombre ?? 'Sin nombre',
+        estadoCirugia: 'pendiente',
+        alertasVet: datos.alertasVet ?? [],
+      }],
+      // GSI3 para que el usuario pueda ver sus registros al vincular su cuenta
+      GSI3PK: `USER#${botUserId}`,
+      GSI3SK: `REG#${regId}`,
+      creadoEn: now,
+      actualizadoEn: now,
+    },
+  }));
+
+  // 4. Índice QR para check-in O(1)
+  if (!enListaEspera) {
+    await ddb.send(new PutCommand({
+      TableName: TABLE_NAME,
+      Item: {
+        PK: `QR#${qrToken}`,
+        SK: 'REG',
+        regId,
+        campaignId,
+        ttl: Math.floor(Date.now() / 1000) + 86400 * 90, // 90 días
+      },
+    }));
+  }
+
+  return { regId, qrToken };
 }
 
 async function dispatchRegistro(
@@ -562,7 +688,7 @@ async function dispatchRegistro(
       return {
         reply: `¡Excelente elección! 🎉 *${seleccionada.titulo}*\n\nElegí el horario que más te convenga:\n\n${listaSlots}`,
         nextState: 'seleccion_turno',
-        datosUpdate: {},
+        stateUpdate: { campaignId: seleccionada.campaignId },
       };
     }
 
@@ -582,6 +708,7 @@ async function dispatchRegistro(
       return {
         reply: `*Confirmá tu inscripción* ✅\n\n🐾 *Mascota:* ${datos.nombre} (${datos.especie} ${datos.sexo})\n🕐 *Turno:* ${slot.horaInicio}\n\n¿Todo correcto?\n\n1. ✅ Confirmar\n2. ✏️ Cambiar algo`,
         nextState: 'confirmacion',
+        stateUpdate: { slotId: slot.slotId },
       };
     }
 
@@ -592,10 +719,26 @@ async function dispatchRegistro(
           nextState: 'confirmacion',
         };
       }
-      // Confirmar — en producción aquí se llamaría a la API de registro
+
+      // Crear registro real en DynamoDB
+      const resultado = await crearRegistracionDesdeBot(state);
+
+      if ('error' in resultado) {
+        return {
+          reply: `Hubo un problema al confirmar tu inscripción: ${resultado.error}. Por favor intentá de nuevo más tarde o registrate en castrar.cr`,
+          nextState: 'completado',
+        };
+      }
+
+      const { qrToken } = resultado;
+      const esListaEspera = !qrToken; // si no hay QR es lista de espera (no debería pasar)
+
+      const qrLink = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${qrToken}`;
+
       return {
-        reply: `¡Inscripción confirmada! 🎉\n\n*${datos.nombre}* está en lista. Te enviaremos el código QR por este mismo chat.\n\n📌 *Recordá:*\n• Ayuno de 8 horas antes\n• Traer cartilla de vacunación\n• Llegar puntual a tu turno\n\n¡Gracias por cuidar a tu mascota! 🐾`,
+        reply: `¡Inscripción confirmada! 🎉\n\n*${datos.nombre}* está registrado/a. Guardá este código QR — lo necesitás el día del evento:\n\n${qrLink}\n\n📌 *Recordá:*\n• Ayuno de 8 horas antes\n• Traer cartilla de vacunación\n• Llegar puntual a tu turno\n\n¡Gracias por cuidar a tu mascota! 🐾`,
         nextState: 'completado',
+        stateUpdate: { regId: resultado.regId },
       };
     }
 
@@ -773,6 +916,7 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
   // Guardar estado actualizado
   const nuevoEstado: ConversationState = {
     ...estadoActual,
+    ...result.stateUpdate,
     estado: result.nextState,
     datos: { ...estadoActual.datos, ...result.datosUpdate },
     ttl: Math.floor(Date.now() / 1000) + ttlSeconds,

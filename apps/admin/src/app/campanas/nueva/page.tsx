@@ -18,14 +18,10 @@ export default function NuevaCampanaPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!orgRescateId) {
-      setError('Selecciona una organización rescatista.');
-      return;
-    }
     setSaving(true);
     setError('');
     try {
-      const { campaignId } = await createCampaign({ titulo, descripcion, orgRescateId, fechaInicio, fechaFin });
+      const { campaignId } = await createCampaign({ titulo, descripcion, orgRescateId: orgRescateId || undefined, fechaInicio, fechaFin });
       router.push(`/campanas/${campaignId}`);
     } catch (err: unknown) {
       setError((err as Error).message);
@@ -50,18 +46,17 @@ export default function NuevaCampanaPage() {
         <Field label="Descripción">
           <textarea value={descripcion} onChange={(e) => setDescripcion(e.target.value)} rows={3} className={cls} />
         </Field>
-        <Field label="Organización rescatista *">
+        <Field label="Organización beneficiada">
           <OrgSelect
             value={orgRescateId}
             onChange={(id) => setOrgRescateId(id)}
-            required
           />
-          <p className="text-xs text-gray-400 mt-1">
-            Recibirá el 50% de las donaciones.{' '}
-            <a href="/orgs" className="text-brand-600 hover:underline" target="_blank" rel="noreferrer">
+          <div className="mt-2 bg-brand-50 border border-brand-100 rounded-xl px-4 py-3 text-sm text-brand-800">
+            ℹ️ <span className="font-medium">Opcional.</span> Si no se selecciona, la organización que crea la campaña recibe el <span className="font-medium">100% de las donaciones</span>, el <span className="font-medium">90% de los pagos procesados por la app</span> y el <span className="font-medium">100% de los pagos en efectivo</span>.{' '}
+            <a href="/orgs" className="underline font-medium hover:text-brand-700" target="_blank" rel="noreferrer">
               Gestionar orgs →
             </a>
-          </p>
+          </div>
         </Field>
         <div className="grid grid-cols-2 gap-4">
           <Field label="Fecha inicio *">
@@ -72,7 +67,7 @@ export default function NuevaCampanaPage() {
           </Field>
         </div>
         <div className="flex gap-3 pt-2">
-          <button type="submit" disabled={saving || !orgRescateId} className="bg-brand-600 text-white px-6 py-2 rounded-lg font-medium disabled:opacity-50">
+          <button type="submit" disabled={saving} className="bg-brand-600 text-white px-6 py-2 rounded-lg font-medium disabled:opacity-50">
             {saving ? 'Creando…' : 'Crear campaña'}
           </button>
           <button type="button" onClick={() => router.back()} className="border px-6 py-2 rounded-lg text-gray-600">

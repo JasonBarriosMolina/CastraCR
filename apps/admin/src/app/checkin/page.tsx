@@ -1,8 +1,119 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { scanQR } from '@/lib/api';
+
+// ─── QR Camera Scanner Modal ──────────────────────────────────────────────────
+function QrScannerModal({ onScan, onClose }: { onScan: (token: string) => void; onClose: () => void }) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const readerRef = useRef<import('@zxing/browser').BrowserQRCodeReader | null>(null);
+  const [camError, setCamError] = useState('');
+
+  const stopReader = useCallback(() => {
+    try {
+      // BrowserQRCodeReader exposes controls via the returned object from decodeFromVideoDevice
+      const controls = (readerRef as React.MutableRefObject<{ stop?: () => void } | null>).current;
+      controls?.stop?.();
+    } catch { /* ignore */ }
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const { BrowserQRCodeReader } = await import('@zxing/browser');
+        if (cancelled) return;
+        const reader = new BrowserQRCodeReader(undefined, {
+          delayBetweenScanAttempts: 300,
+        });
+
+        const controls = await reader.decodeFromVideoDevice(
+          undefined,
+          videoRef.current!,
+          (result, error) => {
+            if (result && !cancelled) {
+              cancelled = true;
+              controls?.stop();
+              onScan(result.getText());
+            }
+            void error; // non-fatal decode misses are expected
+          },
+        );
+        // Store controls for cleanup
+        (readerRef as React.MutableRefObject<typeof controls | null>).current = controls;
+      } catch (err: unknown) {
+        if (!cancelled) setCamError((err as Error).message ?? 'No se pudo acceder a la cámara.');
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+      stopReader();
+    };
+  }, [onScan, stopReader]);
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Escáner QR"
+      className="fixed inset-0 z-50 flex flex-col bg-black"
+    >
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 py-3 bg-black/80">
+        <span className="text-white font-semibold text-base">Apuntá al código QR</span>
+        <button
+          onClick={() => { stopReader(); onClose(); }}
+          aria-label="Cerrar cámara"
+          className="text-white p-2 rounded-xl hover:bg-white/20 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
+        >
+          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      {/* Video */}
+      <div className="flex-1 relative flex items-center justify-center">
+        <video
+          ref={videoRef}
+          className="w-full h-full object-cover"
+          muted
+          playsInline
+          autoPlay
+        />
+        {/* Viewfinder overlay */}
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <div className="w-64 h-64 relative">
+            {/* corners */}
+            {(['tl','tr','bl','br'] as const).map((c) => (
+              <div key={c} className={`absolute w-8 h-8 border-brand-400 border-4
+                ${c === 'tl' ? 'top-0 left-0 border-r-0 border-b-0 rounded-tl-lg' : ''}
+                ${c === 'tr' ? 'top-0 right-0 border-l-0 border-b-0 rounded-tr-lg' : ''}
+                ${c === 'bl' ? 'bottom-0 left-0 border-r-0 border-t-0 rounded-bl-lg' : ''}
+                ${c === 'br' ? 'bottom-0 right-0 border-l-0 border-t-0 rounded-br-lg' : ''}
+              `} />
+            ))}
+            {/* scan line */}
+            <div className="absolute left-2 right-2 top-1/2 h-0.5 bg-brand-400 opacity-80 animate-pulse" />
+          </div>
+        </div>
+      </div>
+
+      {camError && (
+        <div className="px-4 py-3 bg-red-900 text-red-100 text-sm text-center">
+          ⚠️ {camError}
+        </div>
+      )}
+
+      <div className="px-4 py-4 bg-black/80 text-center text-gray-400 text-sm">
+        Mantené el QR dentro del recuadro
+      </div>
+    </div>
+  );
+}
 
 interface PetCheckin {
   petId: string;
@@ -33,6 +144,17 @@ export default function CheckinPage() {
   const [scanning, setScanning] = useState(false);
   const [result, setResult] = useState<CheckinResult | null>(null);
   const [error, setError] = useState('');
+  const [cameraOpen, setCameraOpen] = useState(false);
+  const [hasCamera, setHasCamera] = useState(false);
+
+  // Detectar si hay cámara disponible
+  useEffect(() => {
+    if (typeof navigator !== 'undefined' && navigator.mediaDevices?.enumerateDevices) {
+      navigator.mediaDevices.enumerateDevices().then((devices) => {
+        setHasCamera(devices.some((d) => d.kind === 'videoinput'));
+      }).catch(() => {});
+    }
+  }, []);
 
   const handleScan = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,20 +172,55 @@ export default function CheckinPage() {
     }
   };
 
+  const handleCameraScan = async (token: string) => {
+    setCameraOpen(false);
+    setScanning(true);
+    setError('');
+    setResult(null);
+    try {
+      const data = await scanQR(token.trim());
+      setResult(data.registration as CheckinResult);
+    } catch (err: unknown) {
+      setError((err as Error).message);
+    } finally {
+      setScanning(false);
+    }
+  };
+
   const totalAlertas = result?.pets.flatMap((p) => p.alertasVet ?? []) ?? [];
 
   return (
     <div className="max-w-2xl space-y-6">
+      {cameraOpen && (
+        <QrScannerModal onScan={handleCameraScan} onClose={() => setCameraOpen(false)} />
+      )}
+
       <div>
         <h1 className="text-3xl font-bold text-gray-900">Check-in QR</h1>
         <p className="text-gray-600 mt-1">Escaneá el código QR del registro para confirmar asistencia</p>
       </div>
 
-      {/* ── FORM SCAN ── */}
+      {/* ── SCAN CON CÁMARA ── */}
+      {hasCamera && (
+        <button
+          type="button"
+          onClick={() => setCameraOpen(true)}
+          disabled={scanning}
+          className="w-full flex items-center justify-center gap-3 bg-brand-600 text-white py-4 rounded-2xl font-bold text-lg hover:bg-brand-700 active:scale-95 transition-all disabled:opacity-50 min-h-[64px] shadow-sm"
+        >
+          <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+          Escanear QR con cámara
+        </button>
+      )}
+
+      {/* ── FORM MANUAL ── */}
       <form onSubmit={handleScan} className="bg-white border rounded-2xl p-6 space-y-4">
         <div className="space-y-2">
           <label htmlFor="qrToken" className="block text-sm font-semibold text-gray-700">
-            Código QR
+            {hasCamera ? 'O ingresá el token manualmente' : 'Código QR'}
           </label>
           <input
             id="qrToken"
@@ -72,7 +229,7 @@ export default function CheckinPage() {
             onChange={(e) => setQrToken(e.target.value)}
             placeholder="Escanea o ingresá el token QR"
             required
-            autoFocus
+            autoFocus={!hasCamera}
             aria-label="Token QR del registro"
             className="w-full border rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-brand-500 font-mono"
           />
@@ -81,7 +238,7 @@ export default function CheckinPage() {
           type="submit"
           disabled={scanning || !qrToken.trim()}
           aria-busy={scanning}
-          className="w-full bg-brand-600 text-white py-3 rounded-xl font-semibold text-base hover:bg-brand-700 transition-colors disabled:opacity-50 min-h-[48px]"
+          className="w-full bg-gray-800 text-white py-3 rounded-xl font-semibold text-base hover:bg-gray-900 transition-colors disabled:opacity-50 min-h-[48px]"
         >
           {scanning ? '⏳ Procesando…' : '✅ Confirmar Check-in'}
         </button>

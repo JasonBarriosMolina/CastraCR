@@ -134,6 +134,13 @@ export interface ScreeningAudioResponse {
   razonRechazo?: string;
 }
 
+export async function updatePet(petId: string, data: Partial<ScreeningResult> & Record<string, unknown>): Promise<void> {
+  await apiFetch(`/pets/${petId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  });
+}
+
 export async function submitScreeningAudio(
   petId: string,
   audioBlob: Blob,

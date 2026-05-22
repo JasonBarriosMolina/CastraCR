@@ -14,7 +14,7 @@ const navItems: NavItem[] = [
   { href: '/campanas', label: '📋 Campañas' },
   { href: '/checkin', label: '📱 Check-in QR' },
   { href: '/vets', label: '🩺 Veterinarios' },
-  { href: '/orgs', label: '🏠 Org Rescatistas', superAdminOnly: true },
+  { href: '/orgs', label: '🏠 Organizaciones', superAdminOnly: true },
   { href: '/usuarios', label: '👥 Usuarios', superAdminOnly: true },
 ];
 

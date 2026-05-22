@@ -2,10 +2,10 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { signIn, confirmSignIn, fetchAuthSession, signOut } from 'aws-amplify/auth';
+import { signIn, confirmSignIn, fetchAuthSession, signOut, resetPassword, confirmResetPassword } from 'aws-amplify/auth';
 import '@/lib/amplify';
 
-type Step = 'login' | 'new-password';
+type Step = 'login' | 'new-password' | 'forgot' | 'forgot-confirm' | 'forgot-done';
 
 function Spinner() {
   return (
@@ -52,6 +52,12 @@ function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [resetCode, setResetCode] = useState('');
+  const [resetNewPassword, setResetNewPassword] = useState('');
+  const [resetConfirmPassword, setResetConfirmPassword] = useState('');
+  const [showResetPassword, setShowResetPassword] = useState(false);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
 
   // Redirigir si ya hay sesión válida
   useEffect(() => {
@@ -117,6 +123,48 @@ function LoginForm() {
     }
   };
 
+  // ─── Paso: Solicitar código de reset ─────────────────────────────────────────
+  const handleForgotRequest = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    try {
+      await resetPassword({ username: forgotEmail });
+      setStep('forgot-confirm');
+    } catch (err: unknown) {
+      setError(mapAuthError((err as Error).message));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ─── Paso: Confirmar código + nueva contraseña ────────────────────────────────
+  const handleForgotConfirm = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    if (resetNewPassword !== resetConfirmPassword) {
+      setError('Las contraseñas no coinciden.');
+      return;
+    }
+    if (resetNewPassword.length < 8) {
+      setError('La contraseña debe tener al menos 8 caracteres.');
+      return;
+    }
+    setLoading(true);
+    try {
+      await confirmResetPassword({
+        username: forgotEmail,
+        confirmationCode: resetCode,
+        newPassword: resetNewPassword,
+      });
+      setStep('forgot-done');
+    } catch (err: unknown) {
+      setError(mapAuthError((err as Error).message));
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // ─── Verificar rol y redirigir ────────────────────────────────────────────────
   async function verifyRoleAndRedirect() {
     const session = await fetchAuthSession({ forceRefresh: true });
@@ -140,6 +188,9 @@ function LoginForm() {
     if (message.includes('Password attempts exceeded')) return 'Demasiados intentos. Intenta en unos minutos.';
     if (message.includes('Password does not conform')) return 'La contraseña debe tener mayúsculas, minúsculas y números.';
     if (message.includes('Invalid session')) return 'Sesión expirada. Vuelve a iniciar sesión.';
+    if (message.includes('Invalid verification code')) return 'Código incorrecto. Revisa tu correo e intenta de nuevo.';
+    if (message.includes('Attempt limit exceeded')) return 'Demasiados intentos. Espera unos minutos.';
+    if (message.includes('ExpiredCodeException') || message.includes('expired')) return 'El código expiró. Solicita uno nuevo.';
     return message || 'Error al iniciar sesión. Intenta de nuevo.';
   }
 
@@ -222,9 +273,206 @@ function LoginForm() {
               </button>
             </form>
 
-            <p className="text-xs text-center text-gray-400">
-              ¿Problemas para acceder? Contacta a tu administrador de sistema.
-            </p>
+            <div className="text-center">
+              <button
+                type="button"
+                onClick={() => { setError(''); setForgotEmail(email); setStep('forgot'); }}
+                className="text-sm text-brand-600 hover:text-brand-700 font-medium"
+              >
+                ¿Olvidaste tu contraseña?
+              </button>
+            </div>
+          </>
+        )}
+
+        {/* ── Forgot: Ingresar correo ── */}
+        {step === 'forgot' && (
+          <>
+            <div>
+              <button
+                type="button"
+                onClick={() => { setError(''); setStep('login'); }}
+                className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 mb-4"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                </svg>
+                Volver
+              </button>
+              <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center mb-4">
+                <span className="text-xl">✉️</span>
+              </div>
+              <h1 className="text-xl font-bold text-gray-900">Recuperar contraseña</h1>
+              <p className="text-sm text-gray-500 mt-1">
+                Te enviamos un código de verificación a tu correo.
+              </p>
+            </div>
+
+            {error && (
+              <div className="bg-red-50 border border-red-100 text-red-700 px-4 py-3 rounded-xl text-sm">
+                {error}
+              </div>
+            )}
+
+            <form onSubmit={handleForgotRequest} className="space-y-4">
+              <div className="space-y-1">
+                <label className="block text-sm font-medium text-gray-700">Correo electrónico</label>
+                <input
+                  type="email"
+                  value={forgotEmail}
+                  onChange={(e) => setForgotEmail(e.target.value)}
+                  required
+                  autoFocus
+                  autoComplete="email"
+                  placeholder="tu@correo.com"
+                  className="w-full border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading || !forgotEmail}
+                className="w-full bg-brand-600 text-white py-2.5 rounded-xl font-medium hover:bg-brand-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading
+                  ? <span className="flex items-center justify-center gap-2"><Spinner /> Enviando…</span>
+                  : 'Enviar código'}
+              </button>
+            </form>
+          </>
+        )}
+
+        {/* ── Forgot: Código + nueva contraseña ── */}
+        {step === 'forgot-confirm' && (
+          <>
+            <div>
+              <div className="w-10 h-10 bg-green-50 rounded-xl flex items-center justify-center mb-4">
+                <span className="text-xl">🔑</span>
+              </div>
+              <h1 className="text-xl font-bold text-gray-900">Revisa tu correo</h1>
+              <p className="text-sm text-gray-500 mt-1">
+                Ingresa el código que enviamos a <span className="font-medium text-gray-700">{forgotEmail}</span> y elige una nueva contraseña.
+              </p>
+            </div>
+
+            {error && (
+              <div className="bg-red-50 border border-red-100 text-red-700 px-4 py-3 rounded-xl text-sm">
+                {error}
+              </div>
+            )}
+
+            <form onSubmit={handleForgotConfirm} className="space-y-4">
+              <div className="space-y-1">
+                <label className="block text-sm font-medium text-gray-700">Código de verificación</label>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={resetCode}
+                  onChange={(e) => setResetCode(e.target.value.replace(/\D/g, ''))}
+                  required
+                  autoFocus
+                  autoComplete="one-time-code"
+                  placeholder="123456"
+                  maxLength={6}
+                  className="w-full border rounded-xl px-4 py-2.5 text-sm text-center tracking-widest font-mono focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="block text-sm font-medium text-gray-700">Nueva contraseña</label>
+                <div className="relative">
+                  <input
+                    type={showResetPassword ? 'text' : 'password'}
+                    value={resetNewPassword}
+                    onChange={(e) => setResetNewPassword(e.target.value)}
+                    required
+                    autoComplete="new-password"
+                    placeholder="Mínimo 8 caracteres"
+                    className="w-full border rounded-xl px-4 py-2.5 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+                  />
+                  <button type="button" onClick={() => setShowResetPassword(v => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                    <EyeIcon open={showResetPassword} />
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="block text-sm font-medium text-gray-700">Confirmar contraseña</label>
+                <div className="relative">
+                  <input
+                    type={showResetConfirm ? 'text' : 'password'}
+                    value={resetConfirmPassword}
+                    onChange={(e) => setResetConfirmPassword(e.target.value)}
+                    required
+                    autoComplete="new-password"
+                    placeholder="Repite la contraseña"
+                    className="w-full border rounded-xl px-4 py-2.5 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+                  />
+                  <button type="button" onClick={() => setShowResetConfirm(v => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                    <EyeIcon open={showResetConfirm} />
+                  </button>
+                </div>
+              </div>
+
+              {/* Requisitos */}
+              <ul className="text-xs text-gray-400 space-y-1 pl-1">
+                <li className={resetNewPassword.length >= 8 ? 'text-green-600' : ''}>
+                  {resetNewPassword.length >= 8 ? '✓' : '·'} Al menos 8 caracteres
+                </li>
+                <li className={/[A-Z]/.test(resetNewPassword) ? 'text-green-600' : ''}>
+                  {/[A-Z]/.test(resetNewPassword) ? '✓' : '·'} Una mayúscula
+                </li>
+                <li className={/[0-9]/.test(resetNewPassword) ? 'text-green-600' : ''}>
+                  {/[0-9]/.test(resetNewPassword) ? '✓' : '·'} Un número
+                </li>
+              </ul>
+
+              <button
+                type="submit"
+                disabled={loading || !resetCode || !resetNewPassword || !resetConfirmPassword}
+                className="w-full bg-brand-600 text-white py-2.5 rounded-xl font-medium hover:bg-brand-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading
+                  ? <span className="flex items-center justify-center gap-2"><Spinner /> Guardando…</span>
+                  : 'Cambiar contraseña'}
+              </button>
+            </form>
+
+            <div className="text-center">
+              <button
+                type="button"
+                onClick={() => { setError(''); handleForgotRequest({ preventDefault: () => {} } as React.FormEvent); }}
+                className="text-sm text-gray-500 hover:text-brand-600"
+              >
+                ¿No recibiste el código? Reenviar
+              </button>
+            </div>
+          </>
+        )}
+
+        {/* ── Forgot: Éxito ── */}
+        {step === 'forgot-done' && (
+          <>
+            <div className="text-center space-y-4 py-4">
+              <div className="w-16 h-16 bg-green-50 rounded-2xl flex items-center justify-center mx-auto">
+                <span className="text-3xl">✅</span>
+              </div>
+              <div>
+                <h1 className="text-xl font-bold text-gray-900">¡Contraseña cambiada!</h1>
+                <p className="text-sm text-gray-500 mt-2">
+                  Tu contraseña fue actualizada correctamente. Ya podés iniciar sesión.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => { setError(''); setPassword(''); setStep('login'); }}
+                className="w-full bg-brand-600 text-white py-2.5 rounded-xl font-medium hover:bg-brand-700 transition-colors"
+              >
+                Ir al login
+              </button>
+            </div>
           </>
         )}
 

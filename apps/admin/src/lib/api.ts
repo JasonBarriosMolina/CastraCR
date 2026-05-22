@@ -42,7 +42,7 @@ export async function listMyCampaigns(): Promise<Campaign[]> {
 export async function createCampaign(data: {
   titulo: string;
   descripcion: string;
-  orgRescateId: string;
+  orgRescateId?: string;
   fechaInicio: string;
   fechaFin: string;
 }): Promise<{ campaignId: string }> {

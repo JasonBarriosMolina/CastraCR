@@ -104,7 +104,7 @@ export function OrgSelect({ value, onChange, required }: OrgSelectProps) {
           {filtered.length === 0 ? (
             <div className="px-4 py-3 text-sm text-gray-500">
               {orgs.length === 0
-                ? 'No hay organizaciones registradas. Créalas en la sección Org Rescatistas.'
+                ? 'No hay organizaciones registradas. Créalas en la sección Organizaciones.'
                 : 'Sin resultados para tu búsqueda.'}
             </div>
           ) : (
