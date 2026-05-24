@@ -1,6 +1,7 @@
 export type ConversationStep =
   // ── Flujo de registro ──
   | 'inicio'
+  | 'datos_dueno'             // cédula, cantón, tutor legal si menor
   | 'datos_basicos'           // nombre, especie, sexo, peso, edad
   | 'salud_general'           // condición de salud → Haiku screening
   | 'estado_reproductivo'     // SOLO hembras: embarazo/celo/lactancia
@@ -9,7 +10,8 @@ export type ConversationStep =
   | 'direccion'               // provincia/cantón del dueño
   | 'seleccion_campana'       // lista de ferias cercanas
   | 'seleccion_turno'         // slots disponibles
-  | 'confirmacion'            // resumen + pago
+  | 'resumen_precio'          // precio total + SINPE antes de confirmar
+  | 'confirmacion'            // resumen + confirmación final
   | 'completado'              // QR enviado
   // ── Flujo post-operatorio ──
   | 'postop_seguimiento'      // días 1, 3, 7, 15 post-cirugía
@@ -20,65 +22,90 @@ export type NivelPostOp = 'normal' | 'observacion' | 'urgente';
 export type ModoConversacion = 'registro' | 'postop';
 
 export interface DatosRegistro {
-  // Básicos
+  // Básicos mascota
   nombre?: string;
   especie?: 'perro' | 'gato' | 'otro';
   sexo?: 'macho' | 'hembra';
   pesoKg?: number;
   edadMeses?: number;
   // Salud general
-  condicionSaludRaw?: string;       // texto libre del dueño
+  condicionSaludRaw?: string;
   aptoCirugia?: boolean;
   razonRechazo?: string;
-  alertasVet?: string[];            // alertas para el veterinario
+  alertasVet?: string[];
   // Sex-specific
-  estadoReproductivo?: EstadoReproductivo;  // hembras
-  criptorquidismo?: boolean;                // machos
+  estadoReproductivo?: EstadoReproductivo;
+  criptorquidismo?: boolean;
   // Salud adicional
   vacunasAlDia?: boolean;
+  tieneAntiRabica?: boolean;
   tratamientosActivos?: string;
   // Ubicación
   provincia?: string;
   direccion?: string;
+  // Datos del dueño
+  ownerNombre?: string;
+  ownerTipoCedula?: 'cedula' | 'dimex' | 'pasaporte';
+  ownerCedula?: string;
+  ownerCanton?: string;
+  esMenorDeEdad?: boolean;
+  tutorLegal?: string;
+  telefonoAlterno?: string;
 }
 
 export interface ConversationState {
   telefono: string;
   modo: ModoConversacion;
   estado: ConversationStep;
-  // Datos recolectados durante el registro
   datos: DatosRegistro;
   // Selección de campaña/turno
   campaignId?: string;
   slotId?: string;
   venueId?: string;
-  // Modo post-op
+  // IDs creados
   regId?: string;
   petId?: string;
+  // Modo post-op
   petNombre?: string;
   petEspecie?: string;
   postopDia?: 1 | 3 | 7 | 15;
+  // Organizador para notificaciones postop urgentes
+  orgTelefono?: string;
   // Meta
-  ttl: number; // Unix timestamp — 24h en registro, 16 días en post-op
+  ttl: number;
 }
 
-// ── Resultado de evaluación de elegibilidad (Haiku tool-use) ──
+// ── Herramientas Haiku ──
+
 export interface ElegibilidadResult {
   apto: boolean;
-  razon?: string;       // solo si apto=false
-  alertas: string[];    // avisos para el vet aunque apto=true
+  razon?: string;
+  alertas: string[];
 }
 
-// ── Resultado de estado reproductivo (Haiku tool-use) ──
 export interface EstadoReproductivoResult {
   estado: EstadoReproductivo;
   semanasGestacion?: number;
-  semanasCachorros?: number; // si lactando, edad de los cachorros
+  semanasCachorros?: number;
 }
 
-// ── Resultado de follow-up post-op (Haiku tool-use) ──
 export interface PostOpEvaluacionResult {
   nivel: NivelPostOp;
   descripcion: string;
   signosPreocupantes: string[];
+}
+
+export interface DatosDuenoResult {
+  nombre?: string;
+  tipoCedula?: 'cedula' | 'dimex' | 'pasaporte';
+  numeroCedula?: string;
+  canton?: string;
+  esMenorDeEdad?: boolean;
+  tutorLegal?: string;
+}
+
+export interface SaludAdicionalResult {
+  vacunasAlDia: boolean;
+  tieneAntiRabica: boolean;
+  tratamientosActivos?: string;
 }
