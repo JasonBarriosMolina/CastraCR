@@ -122,7 +122,8 @@ export class ApiStack extends cdk.Stack {
     const vetList     = fn('VetList',     'api/vets/list.ts');
 
     // Campaign costs tracker
-    const campaignCosts = fn('CampaignCosts', 'api/campaigns/costs.ts');
+    const campaignCosts    = fn('CampaignCosts',    'api/campaigns/costs.ts');
+    const campaignWaitlist = fn('CampaignWaitlist', 'api/campaigns/waitlist.ts');
 
     // Admin campaigns
     const adminCampaignList    = fn('AdminCampaignList',    'api/admin/campaigns/list.ts');
@@ -287,7 +288,9 @@ export class ApiStack extends cdk.Stack {
     api.addRoutes({ path: '/checkin/scan', methods: [apigwv2.HttpMethod.POST], integration: int(checkinScan), ...withAuth });
 
     // Campaign costs
-    api.addRoutes({ path: '/campaigns/{id}/costs', methods: [apigwv2.HttpMethod.GET, apigwv2.HttpMethod.POST], integration: int(campaignCosts), ...withAuth });
+    api.addRoutes({ path: '/campaigns/{id}/costs',    methods: [apigwv2.HttpMethod.GET, apigwv2.HttpMethod.POST], integration: int(campaignCosts),    ...withAuth });
+    // Waitlist (pública — el bot la llama sin JWT)
+    api.addRoutes({ path: '/campaigns/{id}/waitlist', methods: [apigwv2.HttpMethod.POST],                        integration: int(campaignWaitlist) });
 
     // Donations
     api.addRoutes({ path: '/donations', methods: [apigwv2.HttpMethod.POST], integration: int(donationIntent), ...withAuth });

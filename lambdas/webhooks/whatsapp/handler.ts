@@ -6,6 +6,7 @@ import twilio from 'twilio';
 import { ddb, TABLE_NAME } from '../../shared/db.js';
 import { getSecrets } from '../../shared/secrets.js';
 import { sanitizeForAI } from '@castrar-cr/utils';
+import { cantonToCoords, distanciaKm } from '../../shared/cantones-cr.js';
 import type {
   ConversationState,
   DatosRegistro,
@@ -216,26 +217,165 @@ async function saveConversation(state: ConversationState, ttlSeconds?: number): 
   }));
 }
 
-async function getCampaignasCercanas(
-  provincia: string,
-): Promise<{ campaignId: string; titulo: string; fecha: string; cupos: number; precio?: Record<string, number>; sinpeMovil?: string; politicaCancelacion?: string; orgTelefono?: string }[]> {
+type CampanaInfo = {
+  campaignId: string;
+  titulo: string;
+  fecha: string;
+  cupos: number;
+  precio?: Record<string, number>;
+  sinpeMovil?: string;
+  politicaCancelacion?: string;
+  orgTelefono?: string;
+  distanciaKm?: number;
+  canton?: string;
+};
+
+async function getCampaignasCercanas(provincia: string): Promise<CampanaInfo[]> {
   const result = await ddb.send(new QueryCommand({
     TableName: TABLE_NAME,
     IndexName: 'GSI4',
     KeyConditionExpression: 'GSI4PK = :estado',
     ExpressionAttributeValues: { ':estado': 'ESTADO#activa' },
-    Limit: 5,
+    Limit: 20,
   }));
-  return (result.Items ?? []).map((item) => ({
-    campaignId: item['campaignId'] as string,
-    titulo: item['titulo'] as string,
-    fecha: item['fechaInicio'] as string,
-    cupos: (item['cuposDisponibles'] as number) ?? 0,
-    precio: item['precio'] as Record<string, number> | undefined,
-    sinpeMovil: item['sinpeMovil'] as string | undefined,
-    politicaCancelacion: item['politicaCancelacion'] as string | undefined,
-    orgTelefono: item['orgTelefono'] as string | undefined,
-  }));
+
+  const coords = cantonToCoords(provincia);
+  const items = (result.Items ?? []).map((item) => {
+    const lat = item['venueLat'] as number | undefined;
+    const lng = item['venueLng'] as number | undefined;
+    const distKm =
+      coords && lat && lng ? distanciaKm(coords.lat, coords.lng, lat, lng) : undefined;
+    return {
+      campaignId: item['campaignId'] as string,
+      titulo: item['titulo'] as string,
+      fecha: item['fechaInicio'] as string,
+      cupos: (item['cuposDisponibles'] as number) ?? 0,
+      precio: item['precio'] as Record<string, number> | undefined,
+      sinpeMovil: item['sinpeMovil'] as string | undefined,
+      politicaCancelacion: item['politicaCancelacion'] as string | undefined,
+      orgTelefono: item['orgTelefono'] as string | undefined,
+      distanciaKm: distKm,
+      canton: item['cantonVenue'] as string | undefined,
+    };
+  });
+
+  // Ordenar por distancia si tenemos coordenadas, sino por fecha
+  if (coords) {
+    items.sort((a, b) => (a.distanciaKm ?? 999) - (b.distanciaKm ?? 999));
+    // Filtrar a max 80km si hay coordenadas
+    const cercanas = items.filter((c) => (c.distanciaKm ?? 0) <= 80);
+    return cercanas.length > 0 ? cercanas.slice(0, 5) : items.slice(0, 5);
+  }
+
+  return items.slice(0, 5);
+}
+
+/** Busca registros previos del número para pre-llenar datos del dueño */
+async function lookupDueno(rawPhone: string): Promise<{
+  ownerNombre?: string;
+  ownerCedula?: string;
+  ownerTipoCedula?: string;
+  ownerCanton?: string;
+  tutorLegal?: string;
+  mascotas: { nombre: string; especie: string; petId: string }[];
+} | null> {
+  try {
+    const botUserId = `WA_${rawPhone}`;
+    const result = await ddb.send(new QueryCommand({
+      TableName: TABLE_NAME,
+      IndexName: 'GSI3',
+      KeyConditionExpression: 'GSI3PK = :pk',
+      ExpressionAttributeValues: { ':pk': `USER#${botUserId}` },
+      Limit: 3,
+      ScanIndexForward: false,
+    }));
+
+    if (!result.Items || result.Items.length === 0) return null;
+
+    // Tomar el registro más reciente para obtener datos del dueño
+    const reg = result.Items[0]!;
+    const petSummaries = (reg['petSummaries'] as { nombre: string; especie: string; petId: string }[]) ?? [];
+
+    // Buscar datos del dueño en el primer pet del registro
+    let ownerData: {
+      ownerNombre?: string;
+      ownerCedula?: string;
+      ownerTipoCedula?: string;
+      ownerCanton?: string;
+      tutorLegal?: string;
+    } = {};
+
+    if (petSummaries.length > 0) {
+      const petResult = await ddb.send(new GetCommand({
+        TableName: TABLE_NAME,
+        Key: { PK: `PET#${petSummaries[0]!.petId}`, SK: 'METADATA' },
+      }));
+      if (petResult.Item) {
+        ownerData = {
+          ownerNombre:     petResult.Item['ownerNombre'] as string | undefined,
+          ownerCedula:     petResult.Item['ownerCedula'] as string | undefined,
+          ownerTipoCedula: petResult.Item['ownerTipoCedula'] as string | undefined,
+          ownerCanton:     petResult.Item['ownerCanton'] as string | undefined,
+          tutorLegal:      petResult.Item['tutorLegal'] as string | undefined,
+        };
+      }
+    }
+
+    if (!ownerData.ownerNombre) return null;
+
+    return {
+      ...ownerData,
+      mascotas: petSummaries.map((p) => ({
+        nombre: p.nombre,
+        especie: p.especie,
+        petId: p.petId,
+      })),
+    };
+  } catch {
+    return null;
+  }
+}
+
+/** Verifica si una mascota (por nombre) del mismo dueño ya fue esterilizada */
+async function verificarHistorialCirugia(
+  rawPhone: string,
+  nombreMascota: string,
+): Promise<{ yaEsterilizado: boolean; fecha?: string; campana?: string }> {
+  try {
+    const botUserId = `WA_${rawPhone}`;
+    const result = await ddb.send(new QueryCommand({
+      TableName: TABLE_NAME,
+      IndexName: 'GSI3',
+      KeyConditionExpression: 'GSI3PK = :pk',
+      ExpressionAttributeValues: { ':pk': `USER#${botUserId}` },
+      Limit: 20,
+      ScanIndexForward: false,
+    }));
+
+    if (!result.Items) return { yaEsterilizado: false };
+
+    const nombreNorm = nombreMascota.toLowerCase().trim();
+
+    for (const reg of result.Items) {
+      const summaries = (reg['petSummaries'] as { nombre: string; estadoCirugia: string }[]) ?? [];
+      for (const pet of summaries) {
+        if (
+          pet.nombre.toLowerCase().trim() === nombreNorm &&
+          pet.estadoCirugia === 'operado'
+        ) {
+          return {
+            yaEsterilizado: true,
+            fecha: reg['actualizadoEn'] as string | undefined,
+            campana: reg['campaignId'] as string | undefined,
+          };
+        }
+      }
+    }
+
+    return { yaEsterilizado: false };
+  } catch {
+    return { yaEsterilizado: false };
+  }
 }
 
 async function getSlots(
@@ -542,10 +682,35 @@ async function dispatchRegistro(
   mediaBase64?: { data: string; mediaType: string },
 ): Promise<StepResult> {
   const datos = state.datos;
+  const rawPhone = state.telefono.replace('whatsapp:', '').replace('+', '');
 
   switch (state.estado) {
     // ── INICIO ──────────────────────────────────────────────────────────────────
     case 'inicio': {
+      // Verificar si el dueño ya registró antes para pre-llenar datos
+      const duenoPrevio = await lookupDueno(rawPhone);
+
+      if (duenoPrevio?.ownerNombre) {
+        const listaMascotas = duenoPrevio.mascotas.length > 0
+          ? `\n\nTus mascotas registradas anteriormente: ${duenoPrevio.mascotas.map((m) => `*${m.nombre}* (${m.especie})`).join(', ')}.`
+          : '';
+
+        return {
+          reply:
+            `¡Hola de nuevo, *${duenoPrevio.ownerNombre}*! 🐾\n\n` +
+            `Encontré tu registro anterior.${listaMascotas}\n\n` +
+            `¿Querés inscribir una mascota nueva o es alguna de las anteriores?`,
+          nextState: 'datos_basicos',
+          datosUpdate: {
+            ownerNombre:     duenoPrevio.ownerNombre,
+            ownerCedula:     duenoPrevio.ownerCedula,
+            ownerTipoCedula: duenoPrevio.ownerTipoCedula as DatosRegistro['ownerTipoCedula'],
+            ownerCanton:     duenoPrevio.ownerCanton,
+            tutorLegal:      duenoPrevio.tutorLegal,
+          },
+        };
+      }
+
       return {
         reply:
           '¡Hola! 🐾 Soy el asistente de *castrar.cr*. Te ayudo a inscribir a tu mascota en una feria de castración cercana.\n\nPrimero necesito algunos datos tuyos. ¿Cuál es tu nombre completo?',
@@ -679,6 +844,24 @@ async function dispatchRegistro(
         pesoKg: extracted?.pesoKg ?? datos.pesoKg,
         edadMeses: extracted?.edadMeses ?? datos.edadMeses,
       };
+
+      // Verificar historial de cirugía previa (evita doble esterilización)
+      if (update.nombre && !datos.nombre) {
+        const historial = await verificarHistorialCirugia(rawPhone, update.nombre);
+        if (historial.yaEsterilizado) {
+          const fechaStr = historial.fecha
+            ? ` el ${new Date(historial.fecha).toLocaleDateString('es-CR')}`
+            : '';
+          return {
+            reply:
+              `⚠️ Según nuestros registros, *${update.nombre}* ya fue esterilizado/a${fechaStr}.\n\n` +
+              `Si creés que hay un error, contactá directamente a la organización.\n\n` +
+              `¿Querés registrar una mascota *diferente*?`,
+            nextState: 'datos_basicos',
+            datosUpdate: {},
+          };
+        }
+      }
 
       // Validaciones duras de edad/peso
       if (update.edadMeses && update.edadMeses < 3) {
@@ -881,16 +1064,31 @@ async function dispatchRegistro(
       const campanas = await getCampaignasCercanas(provincia);
 
       if (campanas.length === 0) {
+        // Intentar agregar a waitlist geográfico (si hay campañas próximas sin cupos)
+        try {
+          await fetch(`${process.env['API_URL'] ?? ''}/campaigns/geo-waitlist`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ telefono: state.telefono, provincia, ownerNombre: datos.ownerNombre }),
+          }).catch(() => null);
+        } catch { /* ignorar */ }
+
         return {
-          reply: `No encontré ferias disponibles cerca de *${provincia}* en este momento.\n\nTe avisamos cuando haya una nueva feria en tu zona. ¡Gracias por tu interés! 🐾`,
+          reply:
+            `No encontré ferias disponibles cerca de *${provincia}* en este momento.\n\n` +
+            `Te avisaremos por WhatsApp cuando haya una nueva feria en tu zona. ¡Gracias por tu interés! 🐾`,
           nextState: 'completado',
           datosUpdate: { provincia },
         };
       }
 
       const lista = campanas
-        .map((c, i) => `${i + 1}. *${c.titulo}* — ${new Date(c.fecha).toLocaleDateString('es-CR')} (${c.cupos} cupos)`)
-        .join('\n');
+        .map((c, i) => {
+          const distStr = c.distanciaKm !== undefined ? ` · ${Math.round(c.distanciaKm)}km` : '';
+          const cantonStr = c.canton ? ` · ${c.canton}` : '';
+          return `${i + 1}. *${c.titulo}*\n   📅 ${new Date(c.fecha).toLocaleDateString('es-CR')}${cantonStr}${distStr} · ${c.cupos} cupos`;
+        })
+        .join('\n\n');
 
       return {
         reply: `Aquí están las ferias disponibles cerca de *${provincia}*:\n\n${lista}\n\nRespondé con el número de la feria que querés.`,
