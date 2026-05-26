@@ -212,7 +212,7 @@ export default function PagarCitaPage({
             <div className="space-y-2">
               {payData.mascotas.map((m, i) => (
                 <div key={i} className="flex items-center gap-2 text-sm text-slate-700">
-                  <span>{m.especie === 'dog' ? '🐕' : m.especie === 'cat' ? '🐈' : '🐾'}</span>
+                  <span>{m.especie === 'perro' ? '🐕' : m.especie === 'gato' ? '🐈' : '🐾'}</span>
                   <span className="font-medium">{m.nombre}</span>
                 </div>
               ))}

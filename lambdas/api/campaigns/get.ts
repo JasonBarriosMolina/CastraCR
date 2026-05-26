@@ -19,7 +19,14 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
     if (!result.Item) throw new NotFoundError('Campaña');
 
     // Strip internal DDB keys
-    const { PK, SK, GSI1PK, GSI1SK, GSI2PK, GSI2SK, GSI4PK, GSI4SK, ...campaign } = result.Item;
+    const { PK, SK, GSI1PK, GSI1SK, GSI2PK, GSI2SK, GSI4PK, GSI4SK, ...campaignRaw } = result.Item;
+    // Garantizar que los arrays nunca sean undefined (compatibilidad con ítems viejos en DDB)
+    const campaign = {
+      ...campaignRaw,
+      venues: (campaignRaw['venues'] as unknown[]) ?? [],
+      slots:  (campaignRaw['slots']  as unknown[]) ?? [],
+      vets:   (campaignRaw['vets']   as unknown[]) ?? [],
+    };
     return ok({ campaign });
   } catch (error) {
     return errorResponse(error);

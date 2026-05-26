@@ -23,14 +23,19 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
         ExpressionAttributeValues: {
           ':pk': `GEOHASH#${geohash}`,
           ':sk': 'CAMPAIGN#',
+          ':active': 'activa',
         },
         FilterExpression: '#estado = :active',
         ExpressionAttributeNames: { '#estado': 'estado' },
       }));
 
-      // Map DDB items to Campaign type (omit internal PK/SK)
+      // Map DDB items to Campaign type — garantizar arrays nunca undefined
       for (const item of result.Items ?? []) {
-        campaigns.push(item as Campaign);
+        const camp = item as Campaign;
+        if (!camp.venues) (camp as Record<string, unknown>)['venues'] = [];
+        if (!camp.slots)  (camp as Record<string, unknown>)['slots']  = [];
+        if (!camp.vets)   (camp as Record<string, unknown>)['vets']   = [];
+        campaigns.push(camp);
       }
     }
 

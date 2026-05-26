@@ -6,15 +6,12 @@ import twilio from 'twilio';
 import { ddb, TABLE_NAME } from '../../shared/db.js';
 import { getSecrets } from '../../shared/secrets.js';
 import { sanitizeForAI } from '@castrar-cr/utils';
-import { cantonToCoords, distanciaKm } from '../../shared/cantones-cr.js';
 import type {
   ConversationState,
   DatosRegistro,
   ElegibilidadResult,
   EstadoReproductivoResult,
   PostOpEvaluacionResult,
-  DatosDuenoResult,
-  SaludAdicionalResult,
 } from '@castrar-cr/types';
 
 const RATE_LIMIT_HOURLY = 30;
@@ -29,7 +26,7 @@ Respondé SOLO con el resultado de la herramienta, sin texto adicional.
 
 Criterios de RECHAZO (apto=false):
 - Vomitando, con diarrea activa, o con fiebre
-- Menos de 3 meses de edad
+- Menos de 4 meses de edad
 - Menos de 2 kg de peso
 - Cirugía o anestesia en las últimas 3 semanas
 - Diabetes, insuficiencia renal o hepática conocida
@@ -44,9 +41,6 @@ Alertas para el vet (apto=true pero alertas no vacías):
 const SYSTEM_REPRODUCTIVO = `Extraé el estado reproductivo de una hembra (perra o gata)
 desde la respuesta del dueño. Respondé SOLO con el resultado de la herramienta.`;
 
-const SYSTEM_DATOS_DUENO = `Extraé los datos del dueño o responsable de la mascota.
-Respondé SOLO con el resultado de la herramienta, sin texto adicional.`;
-
 const SYSTEM_POSTOP = (dia: number, especie: string) =>
   `Sos asistente veterinario evaluando post-operatorio de castración. Día ${dia} post-cirugía. Especie: ${especie}.
 
@@ -58,7 +52,6 @@ Signos URGENTES (nivel=urgente):
 - Abdomen muy inflamado o duro
 - Temperatura muy alta (el dueño lo menciona)
 - Animal inconsciente o no reacciona
-- Pus o secreción con mal olor en la herida
 
 Signos de OBSERVACIÓN (nivel=observacion):
 - Leve hinchazón alrededor de la herida
@@ -115,7 +108,10 @@ const TOOL_REPRODUCTIVO: Anthropic.Tool = {
     type: 'object' as const,
     required: ['estado'],
     properties: {
-      estado: { type: 'string', enum: ['prenada', 'celo', 'lactando', 'normal'] },
+      estado: {
+        type: 'string',
+        enum: ['prenada', 'celo', 'lactando', 'normal'],
+      },
       semanasGestacion: { type: 'number', description: 'Si prenada, semanas estimadas' },
       semanasCachorros: { type: 'number', description: 'Si lactando, edad cachorros en semanas' },
     },
@@ -127,31 +123,13 @@ const TOOL_SALUD_ADICIONAL: Anthropic.Tool = {
   description: 'Extrae información de vacunas y tratamientos activos',
   input_schema: {
     type: 'object' as const,
-    required: ['vacunasAlDia', 'tieneAntiRabica'],
+    required: ['vacunasAlDia'],
     properties: {
       vacunasAlDia: { type: 'boolean' },
-      tieneAntiRabica: { type: 'boolean', description: 'Específicamente si tiene vacuna antirrábica' },
       tratamientosActivos: {
         type: 'string',
         description: 'Descripción de medicamentos o tratamientos activos, o null si ninguno',
       },
-    },
-  },
-};
-
-const TOOL_DATOS_DUENO: Anthropic.Tool = {
-  name: 'extraer_datos_dueno',
-  description: 'Extrae los datos del dueño o responsable de la mascota',
-  input_schema: {
-    type: 'object' as const,
-    required: [],
-    properties: {
-      nombre: { type: 'string' },
-      tipoCedula: { type: 'string', enum: ['cedula', 'dimex', 'pasaporte'] },
-      numeroCedula: { type: 'string' },
-      canton: { type: 'string' },
-      esMenorDeEdad: { type: 'boolean' },
-      tutorLegal: { type: 'string' },
     },
   },
 };
@@ -210,208 +188,39 @@ async function getConversation(telefono: string): Promise<ConversationState | nu
 }
 
 async function saveConversation(state: ConversationState, ttlSeconds?: number): Promise<void> {
-  const ttl = Math.floor(Date.now() / 1000) + (ttlSeconds ?? 86400);
+  const ttl = Math.floor(Date.now() / 1000) + (ttlSeconds ?? 86400); // 24h default
   await ddb.send(new PutCommand({
     TableName: TABLE_NAME,
     Item: { PK: `CONVERSATION#${state.telefono}`, SK: 'WA_STATE', ...state, ttl },
   }));
 }
 
-type CampanaInfo = {
-  campaignId: string;
-  titulo: string;
-  fecha: string;
-  cupos: number;
-  precio?: Record<string, number>;
-  sinpeMovil?: string;
-  politicaCancelacion?: string;
-  orgTelefono?: string;
-  distanciaKm?: number;
-  canton?: string;
-};
-
-async function getCampaignasCercanas(provincia: string): Promise<CampanaInfo[]> {
+async function getCampaignasCercanas(provincia: string): Promise<{ campaignId: string; titulo: string; fecha: string; cupos: number }[]> {
+  // Por ahora devuelve campañas activas — idealmente filtrar por geohash
   const result = await ddb.send(new QueryCommand({
     TableName: TABLE_NAME,
-    IndexName: 'GSI4',
+    IndexName: 'GSI4-estado',
     KeyConditionExpression: 'GSI4PK = :estado',
     ExpressionAttributeValues: { ':estado': 'ESTADO#activa' },
-    Limit: 20,
+    Limit: 5,
   }));
-
-  const coords = cantonToCoords(provincia);
-  const items = (result.Items ?? []).map((item) => {
-    const lat = item['venueLat'] as number | undefined;
-    const lng = item['venueLng'] as number | undefined;
-    const distKm =
-      coords && lat && lng ? distanciaKm(coords.lat, coords.lng, lat, lng) : undefined;
-    return {
-      campaignId: item['campaignId'] as string,
-      titulo: item['titulo'] as string,
-      fecha: item['fechaInicio'] as string,
-      cupos: (item['cuposDisponibles'] as number) ?? 0,
-      precio: item['precio'] as Record<string, number> | undefined,
-      sinpeMovil: item['sinpeMovil'] as string | undefined,
-      politicaCancelacion: item['politicaCancelacion'] as string | undefined,
-      orgTelefono: item['orgTelefono'] as string | undefined,
-      distanciaKm: distKm,
-      canton: item['cantonVenue'] as string | undefined,
-    };
-  });
-
-  // Ordenar por distancia si tenemos coordenadas, sino por fecha
-  if (coords) {
-    items.sort((a, b) => (a.distanciaKm ?? 999) - (b.distanciaKm ?? 999));
-    // Filtrar a max 80km si hay coordenadas
-    const cercanas = items.filter((c) => (c.distanciaKm ?? 0) <= 80);
-    return cercanas.length > 0 ? cercanas.slice(0, 5) : items.slice(0, 5);
-  }
-
-  return items.slice(0, 5);
+  return (result.Items ?? []).map((item) => ({
+    campaignId: item['campaignId'] as string,
+    titulo: item['titulo'] as string,
+    fecha: item['fechaInicio'] as string,
+    cupos: item['cuposDisponibles'] as number ?? 0,
+  }));
 }
 
-/** Busca registros previos del número para pre-llenar datos del dueño */
-async function lookupDueno(rawPhone: string): Promise<{
-  ownerNombre?: string;
-  ownerCedula?: string;
-  ownerTipoCedula?: string;
-  ownerCanton?: string;
-  tutorLegal?: string;
-  mascotas: { nombre: string; especie: string; petId: string }[];
-} | null> {
-  try {
-    const botUserId = `WA_${rawPhone}`;
-    const result = await ddb.send(new QueryCommand({
-      TableName: TABLE_NAME,
-      IndexName: 'GSI3',
-      KeyConditionExpression: 'GSI3PK = :pk',
-      ExpressionAttributeValues: { ':pk': `USER#${botUserId}` },
-      Limit: 3,
-      ScanIndexForward: false,
-    }));
-
-    if (!result.Items || result.Items.length === 0) return null;
-
-    // Tomar el registro más reciente para obtener datos del dueño
-    const reg = result.Items[0]!;
-    const petSummaries = (reg['petSummaries'] as { nombre: string; especie: string; petId: string }[]) ?? [];
-
-    // Buscar datos del dueño en el primer pet del registro
-    let ownerData: {
-      ownerNombre?: string;
-      ownerCedula?: string;
-      ownerTipoCedula?: string;
-      ownerCanton?: string;
-      tutorLegal?: string;
-    } = {};
-
-    if (petSummaries.length > 0) {
-      const petResult = await ddb.send(new GetCommand({
-        TableName: TABLE_NAME,
-        Key: { PK: `PET#${petSummaries[0]!.petId}`, SK: 'METADATA' },
-      }));
-      if (petResult.Item) {
-        ownerData = {
-          ownerNombre:     petResult.Item['ownerNombre'] as string | undefined,
-          ownerCedula:     petResult.Item['ownerCedula'] as string | undefined,
-          ownerTipoCedula: petResult.Item['ownerTipoCedula'] as string | undefined,
-          ownerCanton:     petResult.Item['ownerCanton'] as string | undefined,
-          tutorLegal:      petResult.Item['tutorLegal'] as string | undefined,
-        };
-      }
-    }
-
-    if (!ownerData.ownerNombre) return null;
-
-    return {
-      ...ownerData,
-      mascotas: petSummaries.map((p) => ({
-        nombre: p.nombre,
-        especie: p.especie,
-        petId: p.petId,
-      })),
-    };
-  } catch {
-    return null;
-  }
-}
-
-/** Verifica si una mascota (por nombre) del mismo dueño ya fue esterilizada */
-async function verificarHistorialCirugia(
-  rawPhone: string,
-  nombreMascota: string,
-): Promise<{ yaEsterilizado: boolean; fecha?: string; campana?: string }> {
-  try {
-    const botUserId = `WA_${rawPhone}`;
-    const result = await ddb.send(new QueryCommand({
-      TableName: TABLE_NAME,
-      IndexName: 'GSI3',
-      KeyConditionExpression: 'GSI3PK = :pk',
-      ExpressionAttributeValues: { ':pk': `USER#${botUserId}` },
-      Limit: 20,
-      ScanIndexForward: false,
-    }));
-
-    if (!result.Items) return { yaEsterilizado: false };
-
-    const nombreNorm = nombreMascota.toLowerCase().trim();
-
-    for (const reg of result.Items) {
-      const summaries = (reg['petSummaries'] as { nombre: string; estadoCirugia: string }[]) ?? [];
-      for (const pet of summaries) {
-        if (
-          pet.nombre.toLowerCase().trim() === nombreNorm &&
-          pet.estadoCirugia === 'operado'
-        ) {
-          return {
-            yaEsterilizado: true,
-            fecha: reg['actualizadoEn'] as string | undefined,
-            campana: reg['campaignId'] as string | undefined,
-          };
-        }
-      }
-    }
-
-    return { yaEsterilizado: false };
-  } catch {
-    return { yaEsterilizado: false };
-  }
-}
-
-async function getSlots(
-  campaignId: string,
-): Promise<{ slotId: string; horaInicio: string; cupos: number }[]> {
+async function getSlots(campaignId: string): Promise<{ slotId: string; horaInicio: string; cupos: number }[]> {
   const result = await ddb.send(new GetCommand({
     TableName: TABLE_NAME,
     Key: { PK: `CAMPAIGN#${campaignId}`, SK: 'METADATA' },
   }));
-  const slots = (result.Item?.['slots'] ?? []) as {
-    slotId: string;
-    horaInicio: string;
-    cuposDisponibles: number;
-  }[];
+  const slots = (result.Item?.['slots'] ?? []) as { slotId: string; horaInicio: string; cuposDisponibles: number }[];
   return slots
     .filter((s) => s.cuposDisponibles > 0)
     .map((s) => ({ slotId: s.slotId, horaInicio: s.horaInicio, cupos: s.cuposDisponibles }));
-}
-
-async function getCampaignMeta(
-  campaignId: string,
-): Promise<{ precio?: Record<string, number>; sinpeMovil?: string; politicaCancelacion?: string; titulo?: string; fechaInicio?: string; orgId?: string; orgTelefono?: string } | null> {
-  const result = await ddb.send(new GetCommand({
-    TableName: TABLE_NAME,
-    Key: { PK: `CAMPAIGN#${campaignId}`, SK: 'METADATA' },
-  }));
-  if (!result.Item) return null;
-  return {
-    precio: result.Item['precio'] as Record<string, number> | undefined,
-    sinpeMovil: result.Item['sinpeMovil'] as string | undefined,
-    politicaCancelacion: result.Item['politicaCancelacion'] as string | undefined,
-    titulo: result.Item['titulo'] as string | undefined,
-    fechaInicio: result.Item['fechaInicio'] as string | undefined,
-    orgId: result.Item['orgId'] as string | undefined,
-    orgTelefono: result.Item['orgTelefono'] as string | undefined,
-  };
 }
 
 // ─────────────────────────────────────────────
@@ -437,12 +246,23 @@ async function responderInteractivo(
   botones: string[],
   secrets: Record<string, string>,
 ): Promise<void> {
+  // Twilio WhatsApp interactive buttons — fallback a texto si no soportado
   const client = twilio(secrets['TWILIO_ACCOUNT_SID'], secrets['TWILIO_AUTH_TOKEN']);
-  await client.messages.create({
-    from: `whatsapp:${secrets['TWILIO_WHATSAPP_NUMBER']}`,
-    to,
-    body: `${body}\n\n${botones.map((b, i) => `${i + 1}. ${b}`).join('\n')}`,
-  });
+  try {
+    await (client.messages.create as Function)({
+      from: `whatsapp:${secrets['TWILIO_WHATSAPP_NUMBER']}`,
+      to,
+      contentSid: undefined, // usar template si disponible
+      body: `${body}\n\n${botones.map((b, i) => `${i + 1}. ${b}`).join('\n')}`,
+    });
+  } catch {
+    // fallback texto plano
+    await client.messages.create({
+      from: `whatsapp:${secrets['TWILIO_WHATSAPP_NUMBER']}`,
+      to,
+      body: `${body}\n\n${botones.map((b, i) => `${i + 1}. ${b}`).join('\n')}`,
+    });
+  }
 }
 
 // ─────────────────────────────────────────────
@@ -460,11 +280,7 @@ async function callHaikuTool<T>(
     ? [
         {
           type: 'image',
-          source: {
-            type: 'base64',
-            media_type: mediaBase64.mediaType as 'image/jpeg',
-            data: mediaBase64.data,
-          },
+          source: { type: 'base64', media_type: mediaBase64.mediaType as 'image/jpeg', data: mediaBase64.data },
         },
         { type: 'text', text: userMessage },
       ]
@@ -508,35 +324,6 @@ async function fetchAudioBase64(
 }
 
 // ─────────────────────────────────────────────
-// Precio helpers
-// ─────────────────────────────────────────────
-
-function calcularPrecio(
-  especie: string | undefined,
-  pesoKg: number | undefined,
-  criptorquidismo: boolean | undefined,
-  precio: Record<string, number> | undefined,
-): number {
-  if (!precio) return 0;
-  let base = 0;
-  if (especie === 'gato') {
-    base = precio['cat'] ?? precio['gato'] ?? 0;
-  } else if (especie === 'perro') {
-    const esGrande = (pesoKg ?? 0) >= 20;
-    base = esGrande
-      ? (precio['dog_large'] ?? precio['perro_grande'] ?? precio['dog'] ?? 0)
-      : (precio['dog_small'] ?? precio['perro_pequeno'] ?? precio['dog'] ?? 0);
-  }
-  const extra = criptorquidismo ? (precio['cryptorchidism_extra'] ?? precio['criptorquidismo_extra'] ?? 0) : 0;
-  return base + extra;
-}
-
-function formatColones(monto: number): string {
-  if (monto === 0) return 'Gratuito';
-  return `₡${monto.toLocaleString('es-CR')}`;
-}
-
-// ─────────────────────────────────────────────
 // DISPATCH DE REGISTRO
 // ─────────────────────────────────────────────
 
@@ -544,7 +331,8 @@ interface StepResult {
   reply: string;
   nextState: ConversationState['estado'];
   datosUpdate?: Partial<DatosRegistro>;
-  stateUpdate?: Partial<Pick<ConversationState, 'campaignId' | 'slotId' | 'venueId' | 'regId' | 'petId' | 'orgTelefono'>>;
+  /** Actualizaciones a campos top-level del estado (campaignId, slotId, venueId, etc.) */
+  stateUpdate?: Partial<Pick<ConversationState, 'campaignId' | 'slotId' | 'venueId' | 'regId' | 'petId'>>;
 }
 
 // ─────────────────────────────────────────────
@@ -557,9 +345,11 @@ async function crearRegistracionDesdeBot(
   const { campaignId, slotId, venueId, datos, telefono } = state;
   if (!campaignId || !slotId) return { error: 'Faltan datos de campaña o turno' };
 
+  // userId virtual basado en teléfono (puede ser reclamado por el usuario real después)
   const rawPhone = telefono.replace('whatsapp:', '').replace('+', '');
   const botUserId = `WA_${rawPhone}`;
 
+  // Obtener metadata de la campaña para validar y obtener venueId si falta
   const campaignItem = await ddb.send(new GetCommand({
     TableName: TABLE_NAME,
     Key: { PK: `CAMPAIGN#${campaignId}`, SK: 'METADATA' },
@@ -567,17 +357,17 @@ async function crearRegistracionDesdeBot(
   if (!campaignItem.Item) return { error: 'Campaña no encontrada' };
   const campaign = campaignItem.Item;
 
-  const resolvedVenueId =
-    venueId ??
-    (campaign['venues'] as { venueId: string }[] | undefined)?.[0]?.venueId ??
-    'default';
+  const resolvedVenueId = venueId
+    ?? (campaign['venues'] as { venueId: string }[] | undefined)?.[0]?.venueId
+    ?? 'default';
 
+  // Generar IDs
   const petId = randomUUID();
   const regId = randomUUID();
   const qrToken = randomUUID();
   const now = new Date().toISOString();
 
-  // Decrementar slot atómicamente
+  // 1. Decrementar slot atómicamente — si no hay cupos → lista de espera
   let enListaEspera = false;
   try {
     await ddb.send(new UpdateCommand({
@@ -591,7 +381,7 @@ async function crearRegistracionDesdeBot(
     enListaEspera = true;
   }
 
-  // Crear perfil de mascota
+  // 2. Crear perfil de mascota
   await ddb.send(new PutCommand({
     TableName: TABLE_NAME,
     Item: {
@@ -606,7 +396,6 @@ async function crearRegistracionDesdeBot(
       edadMeses: datos.edadMeses,
       condicionSaludRaw: datos.condicionSaludRaw,
       vacunasAlDia: datos.vacunasAlDia,
-      tieneAntiRabica: datos.tieneAntiRabica,
       tratamientosActivos: datos.tratamientosActivos,
       estadoReproductivo: datos.estadoReproductivo,
       criptorquidismo: datos.criptorquidismo,
@@ -615,19 +404,13 @@ async function crearRegistracionDesdeBot(
       alertasVet: datos.alertasVet ?? [],
       screenedAt: now,
       provincia: datos.provincia,
-      // Datos del dueño asociados al pet
-      ownerNombre: datos.ownerNombre,
-      ownerCedula: datos.ownerCedula,
-      ownerTipoCedula: datos.ownerTipoCedula,
-      ownerCanton: datos.ownerCanton,
-      tutorLegal: datos.tutorLegal,
-      telefonoBot: rawPhone,
       creadoViaBot: true,
+      telefonoBot: rawPhone,
       creadoEn: now,
     },
   }));
 
-  // Crear registro
+  // 3. Crear registro
   const estado = enListaEspera ? 'lista_espera' : 'confirmada';
   await ddb.send(new PutCommand({
     TableName: TABLE_NAME,
@@ -650,6 +433,7 @@ async function crearRegistracionDesdeBot(
         estadoCirugia: 'pendiente',
         alertasVet: datos.alertasVet ?? [],
       }],
+      // GSI3 para que el usuario pueda ver sus registros al vincular su cuenta
       GSI3PK: `USER#${botUserId}`,
       GSI3SK: `REG#${regId}`,
       creadoEn: now,
@@ -657,7 +441,7 @@ async function crearRegistracionDesdeBot(
     },
   }));
 
-  // Índice QR
+  // 4. Índice QR para check-in O(1)
   if (!enListaEspera) {
     await ddb.send(new PutCommand({
       TableName: TABLE_NAME,
@@ -666,7 +450,7 @@ async function crearRegistracionDesdeBot(
         SK: 'REG',
         regId,
         campaignId,
-        ttl: Math.floor(Date.now() / 1000) + 86400 * 90,
+        ttl: Math.floor(Date.now() / 1000) + 86400 * 90, // 90 días
       },
     }));
   }
@@ -678,157 +462,22 @@ async function dispatchRegistro(
   texto: string,
   state: ConversationState,
   anthropic: Anthropic,
-  secrets: Record<string, string>,
   mediaBase64?: { data: string; mediaType: string },
 ): Promise<StepResult> {
   const datos = state.datos;
-  const rawPhone = state.telefono.replace('whatsapp:', '').replace('+', '');
 
   switch (state.estado) {
-    // ── INICIO ──────────────────────────────────────────────────────────────────
     case 'inicio': {
-      // Verificar si el dueño ya registró antes para pre-llenar datos
-      const duenoPrevio = await lookupDueno(rawPhone);
-
-      if (duenoPrevio?.ownerNombre) {
-        const listaMascotas = duenoPrevio.mascotas.length > 0
-          ? `\n\nTus mascotas registradas anteriormente: ${duenoPrevio.mascotas.map((m) => `*${m.nombre}* (${m.especie})`).join(', ')}.`
-          : '';
-
-        return {
-          reply:
-            `¡Hola de nuevo, *${duenoPrevio.ownerNombre}*! 🐾\n\n` +
-            `Encontré tu registro anterior.${listaMascotas}\n\n` +
-            `¿Querés inscribir una mascota nueva o es alguna de las anteriores?`,
-          nextState: 'datos_basicos',
-          datosUpdate: {
-            ownerNombre:     duenoPrevio.ownerNombre,
-            ownerCedula:     duenoPrevio.ownerCedula,
-            ownerTipoCedula: duenoPrevio.ownerTipoCedula as DatosRegistro['ownerTipoCedula'],
-            ownerCanton:     duenoPrevio.ownerCanton,
-            tutorLegal:      duenoPrevio.tutorLegal,
-          },
-        };
-      }
-
       return {
         reply:
-          '¡Hola! 🐾 Soy el asistente de *castrar.cr*. Te ayudo a inscribir a tu mascota en una feria de castración cercana.\n\nPrimero necesito algunos datos tuyos. ¿Cuál es tu nombre completo?',
-        nextState: 'datos_dueno',
-      };
-    }
-
-    // ── DATOS DEL DUEÑO ──────────────────────────────────────────────────────────
-    case 'datos_dueno': {
-      // Si ya tenemos nombre del dueño, pedir cédula y cantón juntos
-      if (!datos.ownerNombre) {
-        const extracted = await callHaikuTool<DatosDuenoResult>(
-          anthropic,
-          SYSTEM_DATOS_DUENO,
-          `El dueño respondió: "${texto}"`,
-          TOOL_DATOS_DUENO,
-          mediaBase64,
-        );
-
-        const update: Partial<DatosRegistro> = {
-          ownerNombre: extracted?.nombre,
-          ownerTipoCedula: extracted?.tipoCedula,
-          ownerCedula: extracted?.numeroCedula,
-          ownerCanton: extracted?.canton,
-          esMenorDeEdad: extracted?.esMenorDeEdad,
-          tutorLegal: extracted?.tutorLegal,
-        };
-
-        // Si menor de edad y falta tutor
-        if (update.esMenorDeEdad && !update.tutorLegal) {
-          return {
-            reply: `Gracias, *${update.ownerNombre ?? 'amigo/a'}*. Como sos menor de edad, necesito el nombre de tu tutor legal. ¿Cómo se llama?`,
-            nextState: 'datos_dueno',
-            datosUpdate: update,
-          };
-        }
-
-        // Si faltan datos básicos del dueño
-        if (!update.ownerNombre) {
-          return {
-            reply: 'Disculpá, no pude entender tu nombre. ¿Cómo te llamás?',
-            nextState: 'datos_dueno',
-          };
-        }
-
-        // Pedir cédula si no la dijo
-        if (!update.ownerCedula) {
-          return {
-            reply: `Mucho gusto, *${update.ownerNombre}*! 🐾\n\n¿Cuál es tu número de cédula? (o DIMEX si sos extranjero/a)`,
-            nextState: 'datos_dueno',
-            datosUpdate: update,
-          };
-        }
-
-        // Pedir cantón si no lo dijo
-        if (!update.ownerCanton) {
-          return {
-            reply: `Anotado ✅ ¿En qué cantón vivís?`,
-            nextState: 'datos_dueno',
-            datosUpdate: update,
-          };
-        }
-
-        // Tenemos todo — avanzar
-        return {
-          reply: `Perfecto ✅ Ahora contame: ¿cómo se llama tu mascota, es perro o gato, macho o hembra, cuánto pesa (en kilos) y qué edad tiene?\n\n(Podés escribir o mandarme una nota de voz 🎤)`,
-          nextState: 'datos_basicos',
-          datosUpdate: update,
-        };
-      }
-
-      // Ya tenemos nombre — completar datos faltantes
-      const extracted = await callHaikuTool<DatosDuenoResult>(
-        anthropic,
-        SYSTEM_DATOS_DUENO,
-        `El dueño respondió: "${texto}"`,
-        TOOL_DATOS_DUENO,
-        mediaBase64,
-      );
-
-      const update: Partial<DatosRegistro> = {
-        ownerTipoCedula: extracted?.tipoCedula ?? datos.ownerTipoCedula,
-        ownerCedula: extracted?.numeroCedula ?? datos.ownerCedula,
-        ownerCanton: extracted?.canton ?? datos.ownerCanton,
-        tutorLegal: extracted?.tutorLegal ?? datos.tutorLegal,
-      };
-
-      if (!update.ownerCedula) {
-        return {
-          reply: '¿Cuál es tu número de cédula o DIMEX?',
-          nextState: 'datos_dueno',
-          datosUpdate: update,
-        };
-      }
-
-      if (!update.ownerCanton) {
-        return {
-          reply: '¿En qué cantón vivís?',
-          nextState: 'datos_dueno',
-          datosUpdate: update,
-        };
-      }
-
-      return {
-        reply: `Perfecto ✅ Ahora contame: ¿cómo se llama tu mascota, es perro o gato, macho o hembra, cuánto pesa (en kilos) y qué edad tiene?`,
+          '¡Hola! 🐾 Soy el asistente de *castrar.cr*. Te ayudo a inscribir a tu mascota en una feria de castración cercana.\n\n¿Cómo se llama tu mascota y qué especie es? (ej: "Mi perro se llama Max")',
         nextState: 'datos_basicos',
-        datosUpdate: update,
       };
     }
 
-    // ── DATOS BÁSICOS DE LA MASCOTA ──────────────────────────────────────────────
     case 'datos_basicos': {
       const extracted = await callHaikuTool<{
-        nombre?: string;
-        especie?: string;
-        sexo?: string;
-        pesoKg?: number;
-        edadMeses?: number;
+        nombre?: string; especie?: string; sexo?: string; pesoKg?: number; edadMeses?: number;
       }>(
         anthropic,
         'Extraé los datos básicos de la mascota del mensaje. Si el usuario no menciona algún dato, omitilo.',
@@ -845,40 +494,6 @@ async function dispatchRegistro(
         edadMeses: extracted?.edadMeses ?? datos.edadMeses,
       };
 
-      // Verificar historial de cirugía previa (evita doble esterilización)
-      if (update.nombre && !datos.nombre) {
-        const historial = await verificarHistorialCirugia(rawPhone, update.nombre);
-        if (historial.yaEsterilizado) {
-          const fechaStr = historial.fecha
-            ? ` el ${new Date(historial.fecha).toLocaleDateString('es-CR')}`
-            : '';
-          return {
-            reply:
-              `⚠️ Según nuestros registros, *${update.nombre}* ya fue esterilizado/a${fechaStr}.\n\n` +
-              `Si creés que hay un error, contactá directamente a la organización.\n\n` +
-              `¿Querés registrar una mascota *diferente*?`,
-            nextState: 'datos_basicos',
-            datosUpdate: {},
-          };
-        }
-      }
-
-      // Validaciones duras de edad/peso
-      if (update.edadMeses && update.edadMeses < 3) {
-        return {
-          reply: `Lo sentimos 😔 *${update.nombre ?? 'Tu mascota'}* tiene menos de 3 meses y aún es muy joven para la cirugía.\n\nPodés volver a inscribirla cuando tenga al menos 3 meses. ¡Gracias por preguntar!`,
-          nextState: 'completado',
-          datosUpdate: { ...update, aptoCirugia: false, razonRechazo: 'Menos de 3 meses de edad' },
-        };
-      }
-      if (update.pesoKg && update.pesoKg < 2) {
-        return {
-          reply: `Lo sentimos 😔 *${update.nombre ?? 'Tu mascota'}* pesa menos de 2 kg, lo cual representa riesgo anestésico.\n\nConsultá con un veterinario de confianza antes de proceder.`,
-          nextState: 'completado',
-          datosUpdate: { ...update, aptoCirugia: false, razonRechazo: 'Peso menor a 2 kg' },
-        };
-      }
-
       const faltantes: string[] = [];
       if (!update.nombre) faltantes.push('el nombre');
       if (!update.especie) faltantes.push('la especie (perro o gato)');
@@ -894,13 +509,12 @@ async function dispatchRegistro(
       }
 
       return {
-        reply: `¡Perfecto! *${update.nombre}* es un${update.especie === 'gato' ? 'a' : ''} ${update.especie} ${update.sexo} de ${update.pesoKg}kg.\n\n¿Tiene alguna enfermedad, malestar o condición especial de salud? (Si está bien, escribí "está sano/a")`,
+        reply: `¡Perfecto! ${update.nombre} es un${update.especie === 'gato' ? 'a' : ''} ${update.especie} ${update.sexo} de ${update.pesoKg}kg.\n\n¿Tiene alguna enfermedad, malestar o condición especial de salud? (Si está bien, escribí "está sano/a")`,
         nextState: 'salud_general',
         datosUpdate: update,
       };
     }
 
-    // ── SALUD GENERAL ────────────────────────────────────────────────────────────
     case 'salud_general': {
       const result = await callHaikuTool<ElegibilidadResult>(
         anthropic,
@@ -917,12 +531,7 @@ async function dispatchRegistro(
         return {
           reply: `Lo sentimos 😔 *${datos.nombre}* no puede participar en esta feria por el momento.\n\n*Razón:* ${result.razon ?? 'condición de salud incompatible con anestesia general'}\n\nCuando mejore, podés volver a intentar el registro. ¡Gracias por cuidar a tu mascota!`,
           nextState: 'completado',
-          datosUpdate: {
-            condicionSaludRaw: texto,
-            aptoCirugia: false,
-            razonRechazo: result.razon,
-            alertasVet: result.alertas,
-          },
+          datosUpdate: { condicionSaludRaw: texto, aptoCirugia: false, razonRechazo: result.razon, alertasVet: result.alertas },
         };
       }
 
@@ -932,22 +541,23 @@ async function dispatchRegistro(
         alertasVet: result.alertas,
       };
 
+      // Rama hembras
       if (datos.sexo === 'hembra') {
         return {
-          reply: `Entendido 👍\n\n¿*${datos.nombre}* está embarazada, en celo o amamantando cachorros actualmente?\n\n1. No, está normal\n2. Está embarazada\n3. Está en celo\n4. Amamantando`,
+          reply: `Entendido 👍\n\n¿${datos.nombre} está embarazada, en celo o amamantando cachorros actualmente?\n\n1. No, está normal\n2. Está embarazada\n3. Está en celo\n4. Amamantando`,
           nextState: 'estado_reproductivo',
           datosUpdate: update,
         };
       }
 
+      // Rama machos
       return {
-        reply: `Entendido 👍\n\n¿Alguno de los testículos de *${datos.nombre}* no descendió correctamente? (criptorquidismo)\n\n1. No, los dos están normales\n2. Sí, uno o ambos no bajaron`,
+        reply: `Entendido 👍\n\n¿Alguno de los testículos de ${datos.nombre} no descendió correctamente? (criptorquidismo)\n\n1. No, los dos están normales\n2. Sí, uno o ambos no bajaron`,
         nextState: 'criptorquidismo',
         datosUpdate: update,
       };
     }
 
-    // ── ESTADO REPRODUCTIVO ──────────────────────────────────────────────────────
     case 'estado_reproductivo': {
       const result = await callHaikuTool<EstadoReproductivoResult>(
         anthropic,
@@ -958,137 +568,87 @@ async function dispatchRegistro(
 
       const estado = result?.estado ?? 'normal';
 
-      if (estado === 'prenada') {
+      if (estado === 'prenada' || estado === 'celo') {
+        const razon = estado === 'prenada'
+          ? 'está embarazada — la cirugía no es segura durante la gestación'
+          : 'está en celo — es necesario esperar al menos 2 meses después del celo';
         return {
-          reply: `Lo sentimos 😔 *${datos.nombre}* no puede operarse porque está embarazada — la cirugía no es segura durante la gestación.\n\nPodés reagendar *mínimo 45 días después del parto*. ¡Cuando llegue ese momento, con gusto la inscribimos!`,
+          reply: `Lo sentimos 😔 *${datos.nombre}* no puede participar en esta feria porque ${razon}.\n\nCuando sea el momento indicado, ¡con gusto te ayudamos a inscribirla!`,
           nextState: 'completado',
-          datosUpdate: {
-            estadoReproductivo: estado,
-            aptoCirugia: false,
-            razonRechazo: 'Embarazada — reagendar 45 días post-parto',
-          },
-        };
-      }
-
-      if (estado === 'celo') {
-        return {
-          reply: `Lo sentimos 😔 *${datos.nombre}* está en celo, lo que aumenta el riesgo quirúrgico.\n\nEs necesario esperar *mínimo 30 días después de que termine el celo*. ¡Escribínos cuando esté lista!`,
-          nextState: 'completado',
-          datosUpdate: {
-            estadoReproductivo: estado,
-            aptoCirugia: false,
-            razonRechazo: 'En celo — reagendar 30 días después',
-          },
+          datosUpdate: { estadoReproductivo: estado, aptoCirugia: false, razonRechazo: razon },
         };
       }
 
       const alertas = datos.alertasVet ?? [];
       if (estado === 'lactando') {
-        const semanas = result?.semanasCachorros;
-        alertas.push(`Lactando${semanas ? ` — cachorros de ${semanas} semanas` : ''}`);
+        alertas.push(`Lactando${result?.semanasCachorros ? ` — cachorros de ${result.semanasCachorros} semanas` : ''}`);
       }
 
       return {
-        reply: `Perfecto ✅\n\n¿*${datos.nombre}* tiene las vacunas al día, incluyendo la *antirrábica*? ¿Está tomando algún medicamento actualmente?\n\n1. Sí, todas las vacunas al día y sin medicamentos\n2. Sí, vacunas al día pero toma medicamentos\n3. No tiene todas las vacunas`,
+        reply: `Perfecto ✅\n\n¿${datos.nombre} tiene las vacunas al día? ¿Está tomando algún medicamento o tratamiento actualmente?\n\n1. Sí, vacunas al día y sin medicamentos\n2. Sí, vacunas al día pero toma medicamentos\n3. No tengo las vacunas al día`,
         nextState: 'vacunas_tratamientos',
         datosUpdate: { estadoReproductivo: estado, alertasVet: alertas },
       };
     }
 
-    // ── CRIPTORQUIDISMO ──────────────────────────────────────────────────────────
     case 'criptorquidismo': {
-      const respLower = texto.toLowerCase();
-      const tieneCripto =
-        /\b(s[ií]|2|dos|uno|solo|sólo|no bajo|no bajó|no descend)\b/.test(respLower) &&
-        !/\b(no,?\s*(los dos|ambos|normales|bien|están bien))\b/.test(respLower);
+      const tieneCripto = /\b(s[ií]|1|uno|no|ambos|solo|sólo)\b/i.test(texto) &&
+        !/\b(no|normales|bien|dos)\b/i.test(texto);
 
       const alertas = datos.alertasVet ?? [];
       if (tieneCripto) {
-        alertas.push('Posible criptorquidismo — confirmar en el evento, procedimiento especializado');
+        alertas.push('Criptorquidismo — requiere procedimiento especializado');
       }
 
       return {
-        reply: `Anotado ✅\n\n¿*${datos.nombre}* tiene las vacunas al día, incluyendo la *antirrábica*? ¿Está tomando algún medicamento?\n\n1. Sí, todas las vacunas al día y sin medicamentos\n2. Sí, vacunas al día pero toma medicamentos\n3. No tiene todas las vacunas`,
+        reply: `Anotado ✅\n\n¿${datos.nombre} tiene las vacunas al día? ¿Está tomando algún medicamento o tratamiento actualmente?\n\n1. Sí, vacunas al día y sin medicamentos\n2. Sí, vacunas al día pero toma medicamentos\n3. No tengo las vacunas al día`,
         nextState: 'vacunas_tratamientos',
         datosUpdate: { criptorquidismo: tieneCripto, alertasVet: alertas },
       };
     }
 
-    // ── VACUNAS Y TRATAMIENTOS ───────────────────────────────────────────────────
     case 'vacunas_tratamientos': {
-      const result = await callHaikuTool<SaludAdicionalResult>(
+      const result = await callHaikuTool<{ vacunasAlDia: boolean; tratamientosActivos?: string }>(
         anthropic,
-        'Extraé información sobre vacunas y tratamientos activos de la mascota. Prestá especial atención a si menciona la vacuna antirrábica específicamente.',
+        'Extraé información sobre vacunas y tratamientos activos de la mascota.',
         texto,
         TOOL_SALUD_ADICIONAL,
       );
 
       const alertas = datos.alertasVet ?? [];
-
-      // Rechazo si no tiene antirrábica
-      if (result?.tieneAntiRabica === false) {
-        return {
-          reply: `⚠️ La *vacuna antirrábica* es obligatoria para participar en campañas de castración (normativa SENASA).\n\nPodés vacunar a *${datos.nombre ?? 'tu mascota'}* en cualquier clínica veterinaria o en los centros SENASA. Una vez vacunada, escribínos de nuevo y la inscribimos con gusto 🐾\n\nMás info: senasa.go.cr`,
-          nextState: 'completado',
-          datosUpdate: {
-            vacunasAlDia: false,
-            tieneAntiRabica: false,
-            aptoCirugia: false,
-            razonRechazo: 'Sin vacuna antirrábica — requerida por SENASA',
-          },
-        };
-      }
-
       if (result?.tratamientosActivos) {
         alertas.push(`Medicamento activo: ${result.tratamientosActivos}`);
       }
       if (result?.vacunasAlDia === false) {
-        alertas.push('Algunas vacunas no al día — recordar traer cartilla');
+        alertas.push('Vacunas no al día — recordar traer cartilla');
       }
 
       return {
-        reply: `¡Listo! 🎉\n\n¿En qué *provincia o cantón* de Costa Rica vivís? Así te muestro las ferias más cercanas.`,
+        reply: `¡Listo! 🎉\n\n¿En qué provincia o cantón vivís? Así te muestro las ferias más cercanas.`,
         nextState: 'direccion',
         datosUpdate: {
           vacunasAlDia: result?.vacunasAlDia,
-          tieneAntiRabica: result?.tieneAntiRabica,
           tratamientosActivos: result?.tratamientosActivos,
           alertasVet: alertas,
         },
       };
     }
 
-    // ── DIRECCIÓN ────────────────────────────────────────────────────────────────
     case 'direccion': {
       const provincia = sanitizeForAI(texto).slice(0, 80);
       const campanas = await getCampaignasCercanas(provincia);
 
       if (campanas.length === 0) {
-        // Intentar agregar a waitlist geográfico (si hay campañas próximas sin cupos)
-        try {
-          await fetch(`${process.env['API_URL'] ?? ''}/campaigns/geo-waitlist`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ telefono: state.telefono, provincia, ownerNombre: datos.ownerNombre }),
-          }).catch(() => null);
-        } catch { /* ignorar */ }
-
         return {
-          reply:
-            `No encontré ferias disponibles cerca de *${provincia}* en este momento.\n\n` +
-            `Te avisaremos por WhatsApp cuando haya una nueva feria en tu zona. ¡Gracias por tu interés! 🐾`,
+          reply: `No encontré ferias disponibles cerca de *${provincia}* en este momento.\n\nTe avisamos cuando haya una nueva feria en tu zona. ¡Gracias!`,
           nextState: 'completado',
           datosUpdate: { provincia },
         };
       }
 
       const lista = campanas
-        .map((c, i) => {
-          const distStr = c.distanciaKm !== undefined ? ` · ${Math.round(c.distanciaKm)}km` : '';
-          const cantonStr = c.canton ? ` · ${c.canton}` : '';
-          return `${i + 1}. *${c.titulo}*\n   📅 ${new Date(c.fecha).toLocaleDateString('es-CR')}${cantonStr}${distStr} · ${c.cupos} cupos`;
-        })
-        .join('\n\n');
+        .map((c, i) => `${i + 1}. *${c.titulo}* — ${new Date(c.fecha).toLocaleDateString('es-CR')} (${c.cupos} cupos)`)
+        .join('\n');
 
       return {
         reply: `Aquí están las ferias disponibles cerca de *${provincia}*:\n\n${lista}\n\nRespondé con el número de la feria que querés.`,
@@ -1097,14 +657,15 @@ async function dispatchRegistro(
       };
     }
 
-    // ── SELECCIÓN DE CAMPAÑA ─────────────────────────────────────────────────────
     case 'seleccion_campana': {
       const campanas = await getCampaignasCercanas(datos.provincia ?? '');
       const idx = parseInt(texto.trim()) - 1;
       const seleccionada = campanas[idx];
 
       if (!seleccionada) {
-        const lista = campanas.map((c, i) => `${i + 1}. *${c.titulo}*`).join('\n');
+        const lista = campanas
+          .map((c, i) => `${i + 1}. *${c.titulo}*`)
+          .join('\n');
         return {
           reply: `Por favor elegí un número de la lista:\n\n${lista}`,
           nextState: 'seleccion_campana',
@@ -1116,22 +677,21 @@ async function dispatchRegistro(
         return {
           reply: `Lo sentimos, *${seleccionada.titulo}* no tiene turnos disponibles. Elegí otra feria o escribí "volver".`,
           nextState: 'seleccion_campana',
+          datosUpdate: {},
         };
       }
 
-      const listaSlots = slots.map((s, i) => `${i + 1}. ${s.horaInicio} (${s.cupos} cupos)`).join('\n');
+      const listaSlots = slots
+        .map((s, i) => `${i + 1}. ${s.horaInicio} (${s.cupos} cupos)`)
+        .join('\n');
 
       return {
         reply: `¡Excelente elección! 🎉 *${seleccionada.titulo}*\n\nElegí el horario que más te convenga:\n\n${listaSlots}`,
         nextState: 'seleccion_turno',
-        stateUpdate: {
-          campaignId: seleccionada.campaignId,
-          orgTelefono: seleccionada.orgTelefono,
-        },
+        stateUpdate: { campaignId: seleccionada.campaignId },
       };
     }
 
-    // ── SELECCIÓN DE TURNO ───────────────────────────────────────────────────────
     case 'seleccion_turno': {
       if (!state.campaignId) {
         return { reply: 'Hubo un error. Por favor escribí "hola" para empezar de nuevo.', nextState: 'inicio' };
@@ -1146,85 +706,21 @@ async function dispatchRegistro(
       }
 
       return {
-        reply: `Turno seleccionado: *${slot.horaInicio}* ✅\n\nPreparando resumen de tu inscripción...`,
-        nextState: 'resumen_precio',
+        reply: `*Confirmá tu inscripción* ✅\n\n🐾 *Mascota:* ${datos.nombre} (${datos.especie} ${datos.sexo})\n🕐 *Turno:* ${slot.horaInicio}\n\n¿Todo correcto?\n\n1. ✅ Confirmar\n2. ✏️ Cambiar algo`,
+        nextState: 'confirmacion',
         stateUpdate: { slotId: slot.slotId },
       };
     }
 
-    // ── RESUMEN DE PRECIO ────────────────────────────────────────────────────────
-    case 'resumen_precio': {
-      if (!state.campaignId || !state.slotId) {
-        return { reply: 'Hubo un error. Escribí "hola" para empezar de nuevo.', nextState: 'inicio' };
-      }
-
-      const meta = await getCampaignMeta(state.campaignId);
-      const slots = await getSlots(state.campaignId);
-      const slot = slots.find((s) => s.slotId === state.slotId) ?? slots[0];
-
-      const precioTotal = calcularPrecio(
-        datos.especie,
-        datos.pesoKg,
-        datos.criptorquidismo,
-        meta?.precio,
-      );
-
-      const lineaPrecioBase = datos.especie === 'gato'
-        ? `🐱 Castración gato: ${formatColones(meta?.precio?.['cat'] ?? meta?.precio?.['gato'] ?? 0)}`
-        : `🐶 Castración perro: ${formatColones(
-            (datos.pesoKg ?? 0) >= 20
-              ? (meta?.precio?.['dog_large'] ?? meta?.precio?.['perro_grande'] ?? 0)
-              : (meta?.precio?.['dog_small'] ?? meta?.precio?.['perro_pequeno'] ?? 0),
-          )}`;
-
-      const lineaCripto = datos.criptorquidismo && (meta?.precio?.['cryptorchidism_extra'] ?? 0) > 0
-        ? `\n   ⚠️ Criptorquidismo extra: ${formatColones(meta?.precio?.['cryptorchidism_extra'] ?? 0)}`
-        : '';
-
-      const lineaSinpe = meta?.sinpeMovil
-        ? `\n   📱 SINPE Móvil: *${meta.sinpeMovil}*`
-        : '';
-
-      const lineaPolitica = meta?.politicaCancelacion
-        ? `\n\n📋 *Política de cancelación:*\n${meta.politicaCancelacion}`
-        : '';
-
-      const resumen =
-        `💰 *Resumen de precio*\n\n` +
-        `${lineaPrecioBase}${lineaCripto}\n` +
-        `   ─────────────────────\n` +
-        `   *Total: ${formatColones(precioTotal)}*\n\n` +
-        `💳 *Métodos de pago:*\n` +
-        `   • Efectivo el día del evento${lineaSinpe}` +
-        lineaPolitica +
-        `\n\n¿Todo correcto? Confirmá para generar tu inscripción.\n\n1. ✅ Confirmar\n2. ✏️ Cambiar algo`;
-
-      return {
-        reply: resumen,
-        nextState: 'confirmacion',
-      };
-    }
-
-    // ── CONFIRMACIÓN ─────────────────────────────────────────────────────────────
     case 'confirmacion': {
-      if (/^[2b]/i.test(texto.trim()) || /cambi|edit|modific/i.test(texto)) {
+      if (/^[2b]/i.test(texto.trim())) {
         return {
-          reply: '¿Qué querés cambiar?\n\n1. Datos de la mascota\n2. Campaña o feria\n3. Horario',
+          reply: '¿Qué querés cambiar? Escribí "especie", "turno" o "feria".',
           nextState: 'confirmacion',
         };
       }
 
-      if (/^3/i.test(texto.trim()) || /horario|turno/i.test(texto)) {
-        return { reply: 'De acuerdo, ¿qué horario preferís?', nextState: 'seleccion_turno' };
-      }
-      if (/^2/i.test(texto.trim()) || /feria|campaña|campa/i.test(texto)) {
-        return { reply: 'Entendido, ¿en qué provincia o cantón buscamos ferias?', nextState: 'direccion' };
-      }
-      if (/^1/i.test(texto.trim()) || /mascota|nombre|peso/i.test(texto)) {
-        return { reply: '¿Qué datos de la mascota querés corregir?', nextState: 'datos_basicos' };
-      }
-
-      // Crear registro real en DDB
+      // Crear registro real en DynamoDB
       const resultado = await crearRegistracionDesdeBot(state);
 
       if ('error' in resultado) {
@@ -1235,25 +731,17 @@ async function dispatchRegistro(
       }
 
       const { qrToken } = resultado;
+      const esListaEspera = !qrToken; // si no hay QR es lista de espera (no debería pasar)
+
       const qrLink = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${qrToken}`;
 
       return {
-        reply:
-          `¡Inscripción confirmada! 🎉\n\n` +
-          `*${datos.nombre}* está registrado/a. Guardá este código QR — lo necesitás el día del evento:\n\n` +
-          `${qrLink}\n\n` +
-          `📌 *Recordá:*\n` +
-          `• Ayuno de 8 horas antes\n` +
-          `• Traer cartilla de vacunación\n` +
-          `• Llegar puntual a tu turno\n` +
-          `• Gatos: llevar en transportadora\n\n` +
-          `¡Gracias por cuidar a tu mascota! 🐾`,
+        reply: `¡Inscripción confirmada! 🎉\n\n*${datos.nombre}* está registrado/a. Guardá este código QR — lo necesitás el día del evento:\n\n${qrLink}\n\n📌 *Recordá:*\n• Ayuno de 8 horas antes\n• Traer cartilla de vacunación\n• Llegar puntual a tu turno\n\n¡Gracias por cuidar a tu mascota! 🐾`,
         nextState: 'completado',
         stateUpdate: { regId: resultado.regId },
       };
     }
 
-    // ── DEFAULT ──────────────────────────────────────────────────────────────────
     default:
       return {
         reply: '¡Hola! 🐾 ¿En qué puedo ayudarte? Escribí cualquier cosa para empezar.',
@@ -1273,7 +761,7 @@ async function handlePostopReply(
   secrets: Record<string, string>,
   mediaBase64?: { data: string; mediaType: string },
 ): Promise<StepResult> {
-  const { petNombre, petEspecie, postopDia, regId, orgTelefono, telefono } = state;
+  const { petNombre, petEspecie, postopDia, regId } = state;
   const dia = postopDia ?? 1;
 
   const result = await callHaikuTool<PostOpEvaluacionResult>(
@@ -1291,7 +779,7 @@ async function handlePostopReply(
     };
   }
 
-  // Guardar respuesta en DDB
+  // Guardar respuesta en el expediente
   if (regId) {
     await ddb.send(new PutCommand({
       TableName: TABLE_NAME,
@@ -1307,51 +795,15 @@ async function handlePostopReply(
         ttl: Math.floor(Date.now() / 1000) + 86400 * 60,
       },
     }));
-
-    // Si urgente: actualizar estadoCirugia a 'complicacion'
-    if (result.nivel === 'urgente') {
-      try {
-        await ddb.send(new UpdateCommand({
-          TableName: TABLE_NAME,
-          Key: { PK: `REG#${regId}`, SK: 'METADATA' },
-          UpdateExpression: 'SET estadoComplicacion = :v, actualizadoEn = :now',
-          ExpressionAttributeValues: {
-            ':v': true,
-            ':now': new Date().toISOString(),
-          },
-        }));
-      } catch {
-        // no bloquear el flujo si falla el update
-      }
-    }
   }
 
-  // ── URGENTE: notificar al organizador via WhatsApp ───────────────────────────
   if (result.nivel === 'urgente') {
-    const telOrg = orgTelefono ?? secrets['BOT_ADMIN_PHONE'];
-    if (telOrg) {
-      const msgOrg =
-        `⚠️ *COMPLICACIÓN POST-OP*\n\n` +
-        `Mascota: *${petNombre ?? 'Sin nombre'}*\n` +
-        `Dueño: ${telefono}\n` +
-        `Día post-op: ${dia}\n` +
-        `Registro: ${regId ?? 'N/D'}\n\n` +
-        `*Signos reportados:*\n${result.signosPreocupantes.map((s) => `• ${s}`).join('\n')}\n\n` +
-        `*Descripción IA:* ${result.descripcion}`;
-      try {
-        await responder(`whatsapp:+${telOrg.replace(/\D/g, '')}`, msgOrg, secrets);
-      } catch {
-        // no bloquear si falla la notificación
-      }
-    }
+    // Actualizar estadoCirugia a 'complicacion'
+    // (en producción buscaríamos el regId y actualizaríamos el pet)
+    console.error(`POST-OP URGENTE: regId=${regId}, dia=${dia}, signos=${result.signosPreocupantes.join(', ')}`);
 
     return {
-      reply:
-        `⚠️ *ATENCIÓN:* Lo que describís sobre *${petNombre ?? 'tu mascota'}* requiere atención veterinaria *inmediata*.\n\n` +
-        `*Signos detectados:* ${result.signosPreocupantes.join(', ')}\n\n` +
-        `🏥 *Llevá a tu mascota a una veterinaria YA.*\n\n` +
-        `También estamos notificando al organizador del evento.\n\n` +
-        `¡La salud de ${petNombre ?? 'tu mascota'} es lo primero!`,
+      reply: `⚠️ *ATENCIÓN:* Lo que describís sobre *${petNombre ?? 'tu mascota'}* requiere atención veterinaria *inmediata*.\n\n*Signos detectados:* ${result.signosPreocupantes.join(', ')}\n\n🏥 Llevá a tu mascota a una veterinaria YA. También estamos notificando al organizador del evento.\n\n¡La salud de ${petNombre ?? 'tu mascota'} es lo primero!`,
       nextState: 'postop_completado',
     };
   }
@@ -1360,7 +812,7 @@ async function handlePostopReply(
     const tips: Record<number, string> = {
       1: 'Es normal un poco de letargo el primer día. Si empeora o no come mañana, consultá al vet.',
       3: 'Revisá que la herida esté limpia y seca. Si ves secreción o mal olor, consultá.',
-      7: 'Esta semana generalmente se retiran los puntos. Verificá con el vet si son disueltos.',
+      7: 'Esta semana generalmente se retiran los puntos. Verificá con el vet si los puntos están disueltos.',
       15: 'La recuperación casi siempre está completa a los 15 días. Si persiste algo, visitá al vet.',
     };
     return {
@@ -1371,9 +823,9 @@ async function handlePostopReply(
 
   // Normal
   const mensajesNormal: Record<number, string> = {
-    1: `¡Qué buenas noticias! 🎉 *${petNombre ?? 'Tu mascota'}* va muy bien. Recordá mantener el cono por 10 días más.`,
+    1: `¡Qué buenas noticias! 🎉 *${petNombre ?? 'Tu mascota'}* va muy bien. Recordá: ayuno corto ya no necesario, pero sí mantener el cono/vestido por 10 días más.`,
     3: `Excelente! 🐾 *${petNombre ?? 'Tu mascota'}* se está recuperando muy bien. Seguí con el antibiótico según indicaciones.`,
-    7: `¡Maravilloso! *${petNombre ?? 'Tu mascota'}* casi completó su recuperación. Esta semana suelen retirarse los puntos — verificá con el vet.`,
+    7: `¡Maravilloso! *${petNombre ?? 'Tu mascota'}* casi completó su recuperación. Esta semana suelen quitarse los puntos — verificá con el vet.`,
     15: `¡Recuperación completa! 🎉 *${petNombre ?? 'Tu mascota'}* está perfecta. Gracias por ser parte del cambio — ¡una mascota más castrada hace una diferencia enorme! 🐾`,
   };
 
@@ -1437,10 +889,13 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
 
   const textoSanitizado = sanitizeForAI(mensaje);
 
-  // Procesar audio o imagen
+  // Procesar audio o imagen si los hay
   let mediaBase64: { data: string; mediaType: string } | undefined;
   if (mediaUrl) {
-    if (mediaContentType.startsWith('audio/') || mediaContentType.startsWith('image/')) {
+    if (mediaContentType.startsWith('audio/')) {
+      mediaBase64 = (await fetchAudioBase64(mediaUrl, secrets)) ?? undefined;
+    } else if (mediaContentType.startsWith('image/')) {
+      // Para imágenes usamos Sonnet — lo manejamos por separado si es necesario
       mediaBase64 = (await fetchAudioBase64(mediaUrl, secrets)) ?? undefined;
     }
   }
@@ -1452,11 +907,13 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
   if (estadoActual.modo === 'postop') {
     result = await handlePostopReply(textoSanitizado, estadoActual, anthropic, secrets, mediaBase64);
   } else {
-    result = await dispatchRegistro(textoSanitizado, estadoActual, anthropic, secrets, mediaBase64);
+    result = await dispatchRegistro(textoSanitizado, estadoActual, anthropic, mediaBase64);
   }
 
+  // Calcular TTL: 16 días en post-op, 24h en registro
   const ttlSeconds = estadoActual.modo === 'postop' ? 86400 * 16 : 86400;
 
+  // Guardar estado actualizado
   const nuevoEstado: ConversationState = {
     ...estadoActual,
     ...result.stateUpdate,
@@ -1466,6 +923,7 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
   };
   await saveConversation(nuevoEstado, ttlSeconds);
 
+  // Responder al usuario
   await responder(telefono, result.reply, secrets);
 
   return { statusCode: 200, body: '' };

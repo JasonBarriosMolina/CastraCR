@@ -40,9 +40,10 @@ export default function DonarPage() {
   const [loadingOrgs, setLoadingOrgs] = useState(true);
 
   useEffect(() => {
+    // Lambda usa ok({orgs}) → respuesta: { data: { orgs: [...] } }
     fetch(`${API}/orgs/rescate`)
       .then((r) => r.json())
-      .then((d: { orgs?: OrgRescatista[] }) => setOrgs(d.orgs ?? []))
+      .then((d: { data?: { orgs?: OrgRescatista[] } }) => setOrgs(d.data?.orgs ?? []))
       .catch(() => setOrgs([]))
       .finally(() => setLoadingOrgs(false));
   }, []);

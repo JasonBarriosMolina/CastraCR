@@ -37,7 +37,7 @@ export default function CampaignDetailPage() {
       .finally(() => setLoading(false));
   }, [id]);
 
-  const venueSlots = campaign?.slots.filter((s) => s.venueId === selectedVenue?.venueId) ?? [];
+  const venueSlots = campaign?.slots?.filter((s) => s.venueId === selectedVenue?.venueId) ?? [];
 
   const togglePet = (petId: string) =>
     setSelectedPetIds((prev) =>
@@ -154,7 +154,7 @@ export default function CampaignDetailPage() {
             Elige la sede
           </h2>
           <div className="space-y-2">
-            {campaign.venues.map((venue) => {
+            {(campaign.venues ?? []).map((venue) => {
               const sel = selectedVenue?.venueId === venue.venueId;
               return (
                 <button
