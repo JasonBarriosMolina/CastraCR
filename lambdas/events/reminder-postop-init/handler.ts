@@ -98,7 +98,7 @@ export const handler: EventBridgeHandler<'Scheduled Event', unknown, void> = asy
       }
 
       // Nombre de la primera mascota del registro
-      const pets = (reg['pets'] as Array<{ nombre: string }>) ?? [];
+      const pets = (reg['petSummaries'] as Array<{ nombre: string }>) ?? [];
       const mascotaNombre = pets[0]?.nombre ?? 'tu mascota';
 
       // 1. Enviar mensaje de la noche
@@ -133,8 +133,8 @@ export const handler: EventBridgeHandler<'Scheduled Event', unknown, void> = asy
             dia,
             telefono: telefonoWA,
             petNombre: mascotaNombre,
-            petId: (reg['pets'] as Array<{ petId: string }>)[0]?.petId ?? '',
-            petEspecie: (reg['pets'] as Array<{ especie?: string }>)[0]?.especie ?? '',
+            petId: (reg['petSummaries'] as Array<{ petId: string }>)[0]?.petId ?? '',
+            petEspecie: (reg['petSummaries'] as Array<{ especie?: string }>)[0]?.especie ?? '',
             campaignId,
             userId,
             ttl,

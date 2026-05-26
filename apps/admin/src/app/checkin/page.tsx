@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { scanQR } from '@/lib/api';
+import { fetchAuthSession } from 'aws-amplify/auth';
 
 // ─── QR Camera Scanner Modal ──────────────────────────────────────────────────
 function QrScannerModal({ onScan, onClose }: { onScan: (token: string) => void; onClose: () => void }) {
@@ -401,9 +402,8 @@ function RecepcionRapida({ regId }: { regId: string }) {
     setGuardando(true);
     try {
       const API = process.env['NEXT_PUBLIC_API_URL'] ?? '';
-      const token = typeof window !== 'undefined'
-        ? (window as unknown as Record<string, unknown>)['__authToken__'] as string | undefined
-        : undefined;
+      const session = await fetchAuthSession().catch(() => null);
+      const token = session?.tokens?.accessToken?.toString();
 
       await fetch(`${API}/registrations/${regId}/expediente`, {
         method: 'PATCH',
