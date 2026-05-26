@@ -26,21 +26,28 @@ async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
     },
   });
 
+  if (res.status === 401 || res.status === 403) {
+    const err = new Error('Debes iniciar sesión para ver esta página.');
+    (err as Error & { code: string }).code = 'UNAUTHORIZED';
+    throw err;
+  }
+
   const text = await res.text();
-  let json: { data?: T; error?: string; code?: string };
+  let json: { data?: T; error?: string; code?: string; message?: string };
   try {
-    json = JSON.parse(text) as { data?: T; error?: string; code?: string };
+    json = JSON.parse(text) as { data?: T; error?: string; code?: string; message?: string };
   } catch {
     throw new Error(`Error del servidor (${res.status})`);
   }
 
-  if (!res.ok) throw new Error(json.error ?? 'Error desconocido');
+  if (!res.ok) throw new Error(json.error ?? json.message ?? 'Error desconocido');
   return json.data as T;
 }
 
 // Campaigns
 export async function listNearbyCampaigns(lat: number, lng: number): Promise<Campaign[]> {
-  const result = await apiFetch<{ campaigns: Campaign[] }>(`/campaigns/nearby?lat=${lat}&lng=${lng}`);
+  // El CDK define la ruta como GET /campaigns (no /campaigns/nearby)
+  const result = await apiFetch<{ campaigns: Campaign[] }>(`/campaigns?lat=${lat}&lng=${lng}`);
   return result.campaigns;
 }
 

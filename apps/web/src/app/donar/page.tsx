@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { fetchAuthSession } from 'aws-amplify/auth';
 
 const API = process.env['NEXT_PUBLIC_API_URL'] ?? '';
 const ONVOPAY_KEY = process.env['NEXT_PUBLIC_ONVOPAY_PUBLIC_KEY'] ?? '';
@@ -181,16 +182,25 @@ function DonationForm({ orgs }: { orgs: OrgRescatista[] }) {
 
     setLoading(true); setError('');
     try {
-      // Necesita JWT — si no tiene sesión, redirigir a login
-      const token = typeof window !== 'undefined'
-        ? (window as unknown as Record<string, unknown>)['__authToken__'] as string | undefined
-        : undefined;
+      // Obtener JWT de Amplify — si no hay sesión, redirigir a login
+      let token: string | undefined;
+      try {
+        const session = await fetchAuthSession();
+        token = session.tokens?.idToken?.toString();
+      } catch {
+        token = undefined;
+      }
+
+      if (!token) {
+        window.location.href = '/auth/login?redirect=/donar';
+        return;
+      }
 
       const res = await fetch(`${API}/donations`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           montoCRC: finalAmountCRC,

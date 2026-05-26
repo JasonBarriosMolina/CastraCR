@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { listMyPets, createPet, getUploadUrl, updatePetPhoto } from '@/lib/api';
 import type { PetProfile, PetSpecies, PetSex } from '@castrar-cr/types';
 
@@ -10,6 +11,7 @@ const CDN_URL = process.env['NEXT_PUBLIC_CDN_URL'] ?? '';
 const API_READY = !!process.env['NEXT_PUBLIC_API_URL'];
 
 export default function MisMascotasPage() {
+  const router = useRouter();
   const [pets, setPets] = useState<PetProfile[]>([]);
   const [loading, setLoading] = useState(API_READY);
   const [showForm, setShowForm] = useState(false);
@@ -31,9 +33,16 @@ export default function MisMascotasPage() {
     if (!API_READY) return;
     listMyPets()
       .then(setPets)
-      .catch((err: unknown) => setError((err as Error).message))
+      .catch((err: unknown) => {
+        const e = err as Error & { code?: string };
+        if (e.code === 'UNAUTHORIZED') {
+          router.push('/auth/login?redirect=/mis-mascotas');
+          return;
+        }
+        setError(e.message);
+      })
       .finally(() => setLoading(false));
-  }, []);
+  }, [router]);
 
   const resetForm = () => {
     setNombre(''); setRaza(''); setPesoKg(''); setEdadAnios(''); setCondicionSalud('');

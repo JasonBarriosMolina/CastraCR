@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { listMyRegistrations, cancelRegistration } from '@/lib/api';
 import type { Registration } from '@castrar-cr/types';
 
@@ -14,6 +15,7 @@ const ESTADO_CONFIG: Record<string, { label: string; cls: string; icon: string }
 const API_READY = !!process.env['NEXT_PUBLIC_API_URL'];
 
 export default function MisRegistrosPage() {
+  const router = useRouter();
   const [registrations, setRegistrations] = useState<Registration[]>([]);
   const [loading, setLoading] = useState(API_READY);
   const [error, setError] = useState('');
@@ -24,9 +26,16 @@ export default function MisRegistrosPage() {
     if (!API_READY) return;
     listMyRegistrations()
       .then(setRegistrations)
-      .catch((err: unknown) => setError((err as Error).message))
+      .catch((err: unknown) => {
+        const e = err as Error & { code?: string };
+        if (e.code === 'UNAUTHORIZED') {
+          router.push('/auth/login?redirect=/mis-registros');
+          return;
+        }
+        setError(e.message);
+      })
       .finally(() => setLoading(false));
-  }, []);
+  }, [router]);
 
   const handleCancel = async (regId: string) => {
     if (!confirm('¿Seguro que deseas cancelar este registro?')) return;
