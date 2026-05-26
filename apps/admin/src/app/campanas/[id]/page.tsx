@@ -77,6 +77,7 @@ export default function AdminCampaignDetailPage() {
   const [tipoPesoMax, setTipoPesoMax]         = useState('');
   const [tipoEdadMin, setTipoEdadMin]         = useState('');
   const [tipoEdadMax, setTipoEdadMax]         = useState('');
+  const [tipoPrecioCRC, setTipoPrecioCRC]     = useState('');
   const [savingTipo, setSavingTipo]           = useState(false);
   const [removingTipoId, setRemovingTipoId]   = useState<string | null>(null);
 
@@ -234,7 +235,7 @@ export default function AdminCampaignDetailPage() {
     if (!confirmIfActive('agregar un tipo de animal')) return;
     setSavingTipo(true); setError(''); setSuccess('');
     try {
-      await updateCampaign(id, { addAnimalType: { especie: tipoEspecie, descripcion: tipoDescripcion || undefined, cantidad: parseInt(tipoCantidad), pesoMin: tipoPesoMin ? parseFloat(tipoPesoMin) : undefined, pesoMax: tipoPesoMax ? parseFloat(tipoPesoMax) : undefined, edadMin: tipoEdadMin ? parseInt(tipoEdadMin) : undefined, edadMax: tipoEdadMax ? parseInt(tipoEdadMax) : undefined } });
+      await updateCampaign(id, { addAnimalType: { especie: tipoEspecie, descripcion: tipoDescripcion || undefined, cantidad: parseInt(tipoCantidad), pesoMin: tipoPesoMin ? parseFloat(tipoPesoMin) : undefined, pesoMax: tipoPesoMax ? parseFloat(tipoPesoMax) : undefined, edadMin: tipoEdadMin ? parseInt(tipoEdadMin) : undefined, edadMax: tipoEdadMax ? parseInt(tipoEdadMax) : undefined, precioCRC: tipoPrecioCRC ? parseInt(tipoPrecioCRC) : 0 } });
       await refresh(); setSuccess('✅ Tipo de animal agregado');
       setTipoEspecie('perro'); setTipoDescripcion(''); setTipoCantidad('');
       setTipoPesoMin(''); setTipoPesoMax(''); setTipoEdadMin(''); setTipoEdadMax('');
@@ -358,6 +359,11 @@ export default function AdminCampaignDetailPage() {
                   <p className="font-semibold text-gray-900 capitalize">{t.especie}</p>
                   {t.descripcion && <p className="text-sm text-gray-600">{t.descripcion}</p>}
                   <p className="text-sm font-medium text-brand-700 mt-0.5">{t.cantidad} cupos</p>
+                  <p className="text-xs font-semibold mt-0.5">
+                    {(t.precioCRC ?? 0) > 0
+                      ? <span className="text-emerald-700">₡{t.precioCRC!.toLocaleString('es-CR')} / mascota</span>
+                      : <span className="text-gray-400">Gratuita</span>}
+                  </p>
                   <div className="text-xs text-gray-400 mt-0.5 flex flex-wrap gap-x-3">
                     {(t.pesoMin != null || t.pesoMax != null) && (
                       <span>Peso: {t.pesoMin != null ? `≥${t.pesoMin}kg` : ''}{t.pesoMin != null && t.pesoMax != null ? '–' : ''}{t.pesoMax != null ? `≤${t.pesoMax}kg` : ''}</span>
@@ -417,6 +423,13 @@ export default function AdminCampaignDetailPage() {
               <div className="space-y-1">
                 <label className={lbl}>Edad máx. meses</label>
                 <input type="number" min="0" value={tipoEdadMax} onChange={(e) => setTipoEdadMax(e.target.value)} className={inp} placeholder="Ej: 84" />
+              </div>
+              <div className="space-y-1 sm:col-span-3">
+                <label className={lbl}>Precio por mascota en CRC (0 = gratuita)</label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-semibold">₡</span>
+                  <input type="number" min="0" step="100" value={tipoPrecioCRC} onChange={(e) => setTipoPrecioCRC(e.target.value)} className={`${inp} pl-8`} placeholder="Ej: 5000 · Dejá en 0 si es gratis" />
+                </div>
               </div>
             </div>
             <button type="submit" disabled={savingTipo} className={btnPrimary}>{savingTipo ? 'Agregando…' : '+ Agregar tipo'}</button>
@@ -716,6 +729,14 @@ export default function AdminCampaignDetailPage() {
         <h2 className="text-xl font-bold text-gray-900">💰 Costos IA & Mensajería</h2>
         <CostWidget campaignId={id} />
       </section>
+
+      {/* ── Reembolsos ──────────────────────────────────────────────────── */}
+      {(campaign.estado === 'cancelada' || campaign.estado === 'finalizada') && (
+        <section className="space-y-4">
+          <h2 className="text-xl font-bold text-gray-900">🔄 Reembolsos</h2>
+          <RefundPanel campaignId={id} />
+        </section>
+      )}
     </div>
   );
 }
@@ -809,6 +830,165 @@ function CostWidget({ campaignId }: { campaignId: string }) {
         <div role="alert" className="flex items-center gap-2 text-amber-700 text-sm font-medium">
           <span aria-hidden="true">⚠️</span>
           Costo supera el estimado de $0.20 / campaña
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Refund Panel ─────────────────────────────────────────────────────────────
+
+interface RefundAppointment {
+  regId: string;
+  ownerPhone?: string;
+  montoCRC: number;
+  pets: { nombre: string }[];
+  estado: string;
+  reembolso?: { estado: string; notaAdmin?: string; procesadoEn?: string };
+}
+
+function RefundPanel({ campaignId }: { campaignId: string }) {
+  const [appointments, setAppointments] = useState<RefundAppointment[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [processing, setProcessing] = useState<string | null>(null);
+  const [nota, setNota] = useState<Record<string, string>>({});
+
+  const API = process.env['NEXT_PUBLIC_API_URL'] ?? '';
+
+  const getToken = () =>
+    typeof window !== 'undefined'
+      ? (window as unknown as Record<string, unknown>)['__authToken__'] as string | undefined
+      : undefined;
+
+  useEffect(() => {
+    const token = getToken();
+    fetch(`${API}/admin/campaigns/${campaignId}/paid-appointments`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    })
+      .then((r) => r.json())
+      .then((d: { appointments?: RefundAppointment[] }) => setAppointments(d.appointments ?? []))
+      .catch(() => setAppointments([]))
+      .finally(() => setLoading(false));
+  }, [campaignId, API]);
+
+  const handleRefundAction = async (regId: string, accion: 'marcar_pendiente' | 'marcar_procesado') => {
+    setProcessing(regId);
+    const token = getToken();
+    try {
+      await fetch(`${API}/admin/appointments/${regId}/refund-note`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ accion, nota: nota[regId] ?? '' }),
+      });
+      // Refrescar lista
+      const r = await fetch(`${API}/admin/campaigns/${campaignId}/paid-appointments`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      const d = await r.json() as { appointments?: RefundAppointment[] };
+      setAppointments(d.appointments ?? []);
+    } catch { /* ignore */ }
+    finally { setProcessing(null); }
+  };
+
+  if (loading) {
+    return <div className="bg-white border rounded-2xl p-5 text-sm text-gray-400">Cargando citas pagadas…</div>;
+  }
+
+  const pendientes = appointments.filter((a) => a.montoCRC > 0 && a.reembolso?.estado !== 'procesado');
+  const procesadas = appointments.filter((a) => a.reembolso?.estado === 'procesado');
+
+  if (appointments.length === 0) {
+    return (
+      <div className="bg-white border rounded-2xl p-5 text-sm text-gray-400">
+        No hay citas con pagos en esta campaña.
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Instrucción */}
+      <div className="bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3 text-sm text-amber-800">
+        <p className="font-bold mb-1">⚠️ Proceso de reembolso manual</p>
+        <ol className="list-decimal list-inside space-y-1 text-amber-700 text-xs">
+          <li>Ingresá al <a href="https://dashboard.onvopay.com" target="_blank" rel="noopener noreferrer" className="underline font-medium">Dashboard de OnvoPay</a></li>
+          <li>Buscá el Payment Intent ID de cada cita y procesá el reembolso</li>
+          <li>Volvé acá y marcá cada cita como "Reembolso procesado"</li>
+        </ol>
+      </div>
+
+      {/* Pendientes */}
+      {pendientes.length > 0 && (
+        <div className="space-y-3">
+          <p className="text-sm font-semibold text-gray-700">Pendientes de reembolso ({pendientes.length})</p>
+          {pendientes.map((a) => (
+            <div key={a.regId} className="bg-white border border-amber-200 rounded-2xl p-4 space-y-3">
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className="font-semibold text-gray-800 text-sm">
+                    {a.pets.map((p) => p.nombre).join(', ')}
+                  </p>
+                  <p className="text-xs text-gray-400 font-mono">{a.regId.slice(0, 16)}…</p>
+                  {a.ownerPhone && <p className="text-xs text-gray-500">📱 {a.ownerPhone}</p>}
+                </div>
+                <span className="font-bold text-emerald-700 text-base">
+                  ₡{a.montoCRC.toLocaleString('es-CR')}
+                </span>
+              </div>
+              <div className="space-y-1">
+                <label className="block text-xs font-medium text-gray-500">Nota (opcional)</label>
+                <input
+                  type="text"
+                  value={nota[a.regId] ?? ''}
+                  onChange={(e) => setNota((prev) => ({ ...prev, [a.regId]: e.target.value }))}
+                  placeholder="Ej: Reembolsado via OnvoPay txn #abc123"
+                  className="w-full border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+                />
+              </div>
+              <div className="flex gap-2">
+                {a.estado !== 'reembolso_pendiente' && (
+                  <button
+                    onClick={() => void handleRefundAction(a.regId, 'marcar_pendiente')}
+                    disabled={processing === a.regId}
+                    className="text-xs border px-3 py-2 rounded-xl text-amber-700 border-amber-300 hover:bg-amber-50 disabled:opacity-50"
+                  >
+                    Marcar pendiente
+                  </button>
+                )}
+                <button
+                  onClick={() => void handleRefundAction(a.regId, 'marcar_procesado')}
+                  disabled={processing === a.regId}
+                  className="text-xs bg-green-600 text-white px-3 py-2 rounded-xl hover:bg-green-700 disabled:opacity-50"
+                >
+                  {processing === a.regId ? 'Guardando…' : '✓ Marcar como reembolsado'}
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Procesados */}
+      {procesadas.length > 0 && (
+        <div className="space-y-2">
+          <p className="text-sm font-semibold text-gray-500">Reembolsos completados ({procesadas.length})</p>
+          {procesadas.map((a) => (
+            <div key={a.regId} className="bg-gray-50 border rounded-xl p-3 flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-700">{a.pets.map((p) => p.nombre).join(', ')}</p>
+                <p className="text-xs text-gray-400">
+                  {a.reembolso?.procesadoEn
+                    ? new Date(a.reembolso.procesadoEn).toLocaleDateString('es-CR')
+                    : '—'}
+                  {a.reembolso?.notaAdmin ? ` · ${a.reembolso.notaAdmin}` : ''}
+                </p>
+              </div>
+              <span className="text-green-600 text-sm font-semibold">✓ ₡{a.montoCRC.toLocaleString('es-CR')}</span>
+            </div>
+          ))}
         </div>
       )}
     </div>

@@ -1,6 +1,14 @@
 import type { SurgeryStatus, EstadoReproductivo } from './pet.js';
 
-export type RegistrationStatus = 'confirmada' | 'cancelada' | 'lista_espera' | 'completada';
+export type RegistrationStatus =
+  | 'pendiente_pago'   // creada por bot, esperando pago (TTL 20 min si no se paga)
+  | 'confirmada'
+  | 'cancelada'
+  | 'lista_espera'
+  | 'completada'
+  | 'expirada'         // no se pagó dentro del TTL
+  | 'reembolso_pendiente'  // campaña cancelada, admin debe procesar reembolso manual
+  | 'reembolsada';
 
 export interface Registration {
   regId: string;
@@ -13,6 +21,19 @@ export interface Registration {
   checkedIn: boolean;
   checkedInAt?: string;
   pets: RegistrationPetSummary[];
+  /** Precio total cobrado en CRC (suma de todos los pets). 0 = gratuita. */
+  montoCRC?: number;
+  /** OnvoPay payment intent id, presente si se inició un pago */
+  paymentIntentId?: string;
+  /** TTL Unix para expirar citas pendiente_pago (20 min tras creación) */
+  paymentTtl?: number;
+  /** Datos de reembolso manual (cuando campaña se cancela) */
+  reembolso?: {
+    estado: 'pendiente' | 'procesado';
+    notaAdmin?: string;
+    procesadoEn?: string;
+    procesadoPor?: string;
+  };
   createdAt: string;
   updatedAt: string;
 }

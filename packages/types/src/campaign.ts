@@ -40,6 +40,8 @@ export interface TipoAnimal {
   pesoMax?: number;       // kg, opcional
   edadMin?: number;       // meses, opcional
   edadMax?: number;       // meses, opcional
+  /** Precio en CRC por mascota. 0 o ausente = gratuita */
+  precioCRC?: number;
 }
 
 export interface Campaign {
@@ -56,6 +58,12 @@ export interface Campaign {
   slots: CampaignSlot[];
   vets: CampaignVet[];
   tiposAnimales?: TipoAnimal[];
+  /**
+   * Precio base por mascota en CRC (colones).
+   * 0 o ausente = campaña gratuita.
+   * Si tiposAnimales tiene precioCRC, ese tiene precedencia sobre este campo.
+   */
+  precioPorMascotaCRC?: number;
   createdAt: string;
   updatedAt: string;
 }

@@ -1,3 +1,10 @@
+/**
+ * POST /donations
+ * Crea un payment intent en OnvoPay para una donación voluntaria en CRC.
+ * El 100% del monto va a la organización rescatista — la plataforma no retiene nada.
+ *
+ * Body: { montoCRC, orgRescateId, campaignId?, cubrimientoFee? }
+ */
 import type { APIGatewayProxyHandlerV2WithJWTAuthorizer } from 'aws-lambda';
 import { ddb, TABLE_NAME } from '../../shared/db.js';
 import { ok, errorResponse } from '../../shared/response.js';
@@ -8,11 +15,8 @@ import { NotFoundError } from '@castrar-cr/utils';
 import type { CreateDonationInput } from '@castrar-cr/types';
 
 const ONVOPAY_API = 'https://api.onvopay.com/v1';
-
-// Validar monto entre $1 y $10,000 (en centavos)
-function validateAmount(cents: number): boolean {
-  return Number.isInteger(cents) && cents >= 100 && cents <= 1_000_000;
-}
+const MONTO_MINIMO_CRC = 500;       // ₡500 mínimo
+const MONTO_MAXIMO_DEFAULT_CRC = 100_000; // ₡100,000 si la org no configura límite
 
 export const handler: APIGatewayProxyHandlerV2WithJWTAuthorizer = async (event) => {
   try {
@@ -20,28 +24,53 @@ export const handler: APIGatewayProxyHandlerV2WithJWTAuthorizer = async (event) 
     requireRole(authCtx, 'Dueno', 'Organizador', 'SuperAdmin');
 
     const body = JSON.parse(event.body ?? '{}') as CreateDonationInput;
-    const { monto, orgRescateId, campaignId } = body;
+    const { montoCRC, orgRescateId, campaignId, cubrimientoFee } = body;
 
-    if (!monto || !orgRescateId) {
-      return { statusCode: 400, body: JSON.stringify({ error: 'monto y orgRescateId son requeridos', code: 'INVALID_BODY' }) };
-    }
-    if (!validateAmount(monto)) {
-      return { statusCode: 400, body: JSON.stringify({ error: 'El monto debe estar entre $1 y $10,000', code: 'INVALID_AMOUNT' }) };
+    if (!montoCRC || !orgRescateId) {
+      return {
+        statusCode: 400,
+        body: JSON.stringify({ error: 'montoCRC y orgRescateId son requeridos', code: 'INVALID_BODY' }),
+      };
     }
 
-    // Validar que la org existe
-    const orgResult = await ddb.send(new GetCommand({
+    if (!Number.isInteger(montoCRC) || montoCRC < MONTO_MINIMO_CRC) {
+      return {
+        statusCode: 400,
+        body: JSON.stringify({ error: `El monto mínimo es ₡${MONTO_MINIMO_CRC.toLocaleString()}`, code: 'INVALID_AMOUNT' }),
+      };
+    }
+
+    // Validar org y respetar su límite de donación
+    const orgRes = await ddb.send(new GetCommand({
       TableName: TABLE_NAME,
-      Key: { PK: `ORG#${orgRescateId}`, SK: 'PROFILE' },
+      Key: { PK: `ORG_RESCATE#${orgRescateId}`, SK: 'PROFILE' },
     }));
-    if (!orgResult.Item) throw new NotFoundError('Organización de rescate');
+    if (!orgRes.Item) throw new NotFoundError('Organización rescatista');
+
+    const donacionMaxima = (orgRes.Item['donacionMaximaCRC'] as number | undefined) ?? MONTO_MAXIMO_DEFAULT_CRC;
+    if (montoCRC > donacionMaxima) {
+      return {
+        statusCode: 400,
+        body: JSON.stringify({
+          error: `El monto máximo de donación para esta organización es ₡${donacionMaxima.toLocaleString()}`,
+          code: 'AMOUNT_EXCEEDS_LIMIT',
+          maxCRC: donacionMaxima,
+        }),
+      };
+    }
+
+    // Si el donante cubre el fee, ajustar monto para que la org reciba el monto exacto
+    // Fee OnvoPay ≈ 3.9% + ₡215 fijos. Calculamos el gross necesario:
+    //   gross = (montoCRC + 215) / (1 - 0.039)
+    const montoFinal = cubrimientoFee
+      ? Math.ceil((montoCRC + 215) / (1 - 0.039))
+      : montoCRC;
 
     const secrets = await getSecrets();
     const apiKey = secrets['ONVOPAY_SECRET_KEY'] ?? '';
 
-    // Crear payment intent en OnvoPay
-    // Docs: POST /v1/payment-intents
-    // Currency: USD o CRC (centavos)
+    const orgNombre = orgRes.Item['nombre'] as string ?? 'Organización rescatista';
+
     const response = await fetch(`${ONVOPAY_API}/payment-intents`, {
       method: 'POST',
       headers: {
@@ -49,21 +78,26 @@ export const handler: APIGatewayProxyHandlerV2WithJWTAuthorizer = async (event) 
         'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        amount: monto,
-        currency: 'USD',
+        amount: montoFinal,
+        currency: 'CRC',
+        description: `Donación a ${orgNombre}`,
         metadata: {
           tipo: 'donacion',
           userId: authCtx.userId,
           orgRescateId,
           campaignId: campaignId ?? '',
+          cubrimientoFee: cubrimientoFee ? 'true' : 'false',
         },
       }),
     });
 
     if (!response.ok) {
       const errText = await response.text();
-      console.error('OnvoPay error:', errText);
-      return { statusCode: 502, body: JSON.stringify({ error: 'Error al crear pago', code: 'PAYMENT_PROVIDER_ERROR' }) };
+      console.error('OnvoPay donation intent error:', errText);
+      return {
+        statusCode: 502,
+        body: JSON.stringify({ error: 'Error al crear el pago', code: 'PAYMENT_PROVIDER_ERROR' }),
+      };
     }
 
     const data = await response.json() as { id: string; token: string; clientSecret?: string };
@@ -71,7 +105,10 @@ export const handler: APIGatewayProxyHandlerV2WithJWTAuthorizer = async (event) 
     return ok({
       paymentToken: data.token ?? data.clientSecret ?? data.id,
       paymentIntentId: data.id,
-      amount: monto,
+      montoCRC: montoFinal,
+      montoOriginalCRC: montoCRC,
+      cubrimientoFee: cubrimientoFee ?? false,
+      orgNombre,
     });
   } catch (error) {
     return errorResponse(error);

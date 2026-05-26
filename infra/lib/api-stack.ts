@@ -113,6 +113,15 @@ export class ApiStack extends cdk.Stack {
     const donationIntent = fn('DonationIntent', 'api/donations/create-intent.ts');
     const donationList   = fn('DonationList',   'api/donations/list.ts');
 
+    // Orgs rescatistas — lista pública para donaciones
+    const orgListRescate = fn('OrgListRescate', 'api/orgs/list-rescate.ts');
+
+    // Pago de citas (público — sin JWT, acceso por UUID del appointment)
+    const appointmentPayIntent = fn('AppointmentPayIntent', 'api/appointments/pay-intent.ts');
+
+    // Admin reembolsos
+    const adminRefundNote = fn('AdminRefundNote', 'api/admin/appointments/refund-note.ts');
+
     // Impact
     const impactGet = fn('ImpactGet', 'api/impact/get.ts');
 
@@ -124,6 +133,23 @@ export class ApiStack extends cdk.Stack {
     // Campaign costs tracker
     const campaignCosts    = fn('CampaignCosts',    'api/campaigns/costs.ts');
     const campaignWaitlist = fn('CampaignWaitlist', 'api/campaigns/waitlist.ts');
+
+    // ── Bot external API ──────────────────────────────────────────────────────
+    const campaignSlots          = fn('CampaignSlots',         'api/campaigns/slots.ts');
+    const campaignCancelCampaign = fn('CampaignCancelCampaign','api/campaigns/cancel-campaign.ts');
+    const campaignUpdateCapacity = fn('CampaignUpdateCapacity','api/campaigns/update-capacity.ts');
+    const campaignExtend         = fn('CampaignExtend',        'api/campaigns/extend.ts');
+
+    const appointmentCreate      = fn('AppointmentCreate',     'api/appointments/create.ts');
+    const appointmentCancel      = fn('AppointmentCancel',     'api/appointments/cancel.ts');
+    const appointmentReschedule  = fn('AppointmentReschedule', 'api/appointments/reschedule.ts');
+    const appointmentUpdatePet   = fn('AppointmentUpdatePet',  'api/appointments/update-pet.ts');
+    const appointmentNoShow      = fn('AppointmentNoShow',     'api/appointments/no-show.ts');
+    const appointmentFollowup    = fn('AppointmentFollowup',   'api/appointments/followup.ts');
+    const appointmentClose       = fn('AppointmentClose',      'api/appointments/close.ts');
+
+    const ownerLookup            = fn('OwnerLookup',           'api/owners/lookup.ts');
+    const petHistory             = fn('PetHistory',            'api/pets/history.ts');
 
     // Admin campaigns
     const adminCampaignList    = fn('AdminCampaignList',    'api/admin/campaigns/list.ts');
@@ -153,6 +179,7 @@ export class ApiStack extends cdk.Stack {
     const whatsappWebhook = fn('WhatsappWebhook', 'webhooks/whatsapp/handler.ts', {}, cdk.Duration.seconds(30), 512);
 
     // ─── Scheduled Event Lambdas ───────────────────────────────────────────────
+    const releasePendingPayments = fn('ReleasePendingPayments', 'events/release-pending-payments/handler.ts', {}, cdk.Duration.seconds(30));
     const monthlyClose   = fn('MonthlyClose',   'events/monthly-close/handler.ts',  {}, cdk.Duration.minutes(5), 512);
     const notifyWaitlist = fn('NotifyWaitlist', 'events/notify-waitlist/handler.ts',{}, cdk.Duration.seconds(30));
     const releaseSlots   = fn('ReleaseSlots',   'events/release-slots/handler.ts');
@@ -200,6 +227,13 @@ export class ApiStack extends cdk.Stack {
       targets: [new targets.LambdaFunction(releaseSlots)],
     });
 
+    new events.Rule(this, 'ReleasePendingPaymentsRule', {
+      ruleName: `castrar-cr-${props.appEnv}-release-pending-payments`,
+      description: 'Libera cupos de citas pendiente_pago cuyo TTL de 20 min venció',
+      schedule: events.Schedule.rate(cdk.Duration.minutes(5)),
+      targets: [new targets.LambdaFunction(releasePendingPayments)],
+    });
+
     new events.Rule(this, 'Reminder24hRule', {
       ruleName: `castrar-cr-${props.appEnv}-reminder-24h`,
       schedule: events.Schedule.rate(cdk.Duration.minutes(30)),
@@ -239,6 +273,19 @@ export class ApiStack extends cdk.Stack {
       },
     });
 
+    // API Key Authorizer — para endpoints del bot externo
+    const apiKeyAuthorizerFn = fn('ApiKeyAuthorizer', 'authorizers/api-key.ts', {}, cdk.Duration.seconds(10), 128);
+    const apiKeyAuthorizer = new authorizers.HttpLambdaAuthorizer(
+      'ApiKeyAuthorizer',
+      apiKeyAuthorizerFn,
+      {
+        authorizerName: `castrar-cr-${props.appEnv}-api-key-authorizer`,
+        responseTypes: [authorizers.HttpLambdaResponseType.SIMPLE],
+        resultsCacheTtl: cdk.Duration.minutes(5),
+        identitySource: ['$request.header.X-Api-Key'],
+      },
+    );
+
     // JWT Authorizer — Cognito User Pool
     const jwtAuthorizer = new authorizers.HttpJwtAuthorizer(
       'CognitoJwt',
@@ -249,18 +296,21 @@ export class ApiStack extends cdk.Stack {
       },
     );
 
-    const withAuth = { authorizer: jwtAuthorizer };
+    const withAuth    = { authorizer: jwtAuthorizer };
+    const withApiKey  = { authorizer: apiKeyAuthorizer };
 
     const int = (f: lambda.IFunction) =>
       new integrations.HttpLambdaIntegration(`${f.node.id}Int`, f);
 
     // ─── Public routes (no JWT) ────────────────────────────────────────────────
-    api.addRoutes({ path: '/campaigns',         methods: [apigwv2.HttpMethod.GET],  integration: int(campaignNearby) });
-    api.addRoutes({ path: '/campaigns/{id}',    methods: [apigwv2.HttpMethod.GET],  integration: int(campaignGet) });
-    api.addRoutes({ path: '/vets',              methods: [apigwv2.HttpMethod.GET],  integration: int(vetList) });
-    api.addRoutes({ path: '/impact',            methods: [apigwv2.HttpMethod.GET],  integration: int(impactGet) });
-    api.addRoutes({ path: '/webhooks/onvopay',  methods: [apigwv2.HttpMethod.POST], integration: int(onvoPayWebhook) });
-    api.addRoutes({ path: '/webhooks/whatsapp', methods: [apigwv2.HttpMethod.POST], integration: int(whatsappWebhook) });
+    api.addRoutes({ path: '/campaigns',                      methods: [apigwv2.HttpMethod.GET],  integration: int(campaignNearby) });
+    api.addRoutes({ path: '/campaigns/{id}',                 methods: [apigwv2.HttpMethod.GET],  integration: int(campaignGet) });
+    api.addRoutes({ path: '/vets',                           methods: [apigwv2.HttpMethod.GET],  integration: int(vetList) });
+    api.addRoutes({ path: '/impact',                         methods: [apigwv2.HttpMethod.GET],  integration: int(impactGet) });
+    api.addRoutes({ path: '/orgs/rescate',                   methods: [apigwv2.HttpMethod.GET],  integration: int(orgListRescate) });
+    api.addRoutes({ path: '/appointments/{id}/pay-intent',   methods: [apigwv2.HttpMethod.POST], integration: int(appointmentPayIntent) });
+    api.addRoutes({ path: '/webhooks/onvopay',               methods: [apigwv2.HttpMethod.POST], integration: int(onvoPayWebhook) });
+    api.addRoutes({ path: '/webhooks/whatsapp',              methods: [apigwv2.HttpMethod.POST], integration: int(whatsappWebhook) });
 
     // ─── Auth routes (JWT required) ────────────────────────────────────────────
 
@@ -289,8 +339,25 @@ export class ApiStack extends cdk.Stack {
 
     // Campaign costs
     api.addRoutes({ path: '/campaigns/{id}/costs',    methods: [apigwv2.HttpMethod.GET, apigwv2.HttpMethod.POST], integration: int(campaignCosts),    ...withAuth });
-    // Waitlist (pública — el bot la llama sin JWT)
-    api.addRoutes({ path: '/campaigns/{id}/waitlist', methods: [apigwv2.HttpMethod.POST],                        integration: int(campaignWaitlist) });
+    // Waitlist — protegida con API Key (el bot la llama)
+    api.addRoutes({ path: '/campaigns/{id}/waitlist', methods: [apigwv2.HttpMethod.POST], integration: int(campaignWaitlist), ...withApiKey });
+
+    // ── Bot external API routes (X-API-Key) ──────────────────────────────────
+    api.addRoutes({ path: '/campaigns/{id}/slots',        methods: [apigwv2.HttpMethod.GET],    integration: int(campaignSlots),          ...withApiKey });
+    api.addRoutes({ path: '/campaigns/{id}/appointments', methods: [apigwv2.HttpMethod.POST],   integration: int(appointmentCreate),      ...withApiKey });
+    api.addRoutes({ path: '/campaigns/{id}/cancel',       methods: [apigwv2.HttpMethod.POST],   integration: int(campaignCancelCampaign), ...withApiKey });
+    api.addRoutes({ path: '/campaigns/{id}/capacity',     methods: [apigwv2.HttpMethod.PATCH],  integration: int(campaignUpdateCapacity), ...withApiKey });
+    api.addRoutes({ path: '/campaigns/{id}/extend',       methods: [apigwv2.HttpMethod.POST],   integration: int(campaignExtend),         ...withApiKey });
+
+    api.addRoutes({ path: '/appointments/{id}/cancel',    methods: [apigwv2.HttpMethod.DELETE], integration: int(appointmentCancel),      ...withApiKey });
+    api.addRoutes({ path: '/appointments/{id}/reschedule',methods: [apigwv2.HttpMethod.PATCH],  integration: int(appointmentReschedule),  ...withApiKey });
+    api.addRoutes({ path: '/appointments/{id}/pet',       methods: [apigwv2.HttpMethod.PATCH],  integration: int(appointmentUpdatePet),   ...withApiKey });
+    api.addRoutes({ path: '/appointments/{id}/no-show',   methods: [apigwv2.HttpMethod.POST],   integration: int(appointmentNoShow),      ...withApiKey });
+    api.addRoutes({ path: '/appointments/{id}/followup',  methods: [apigwv2.HttpMethod.POST],   integration: int(appointmentFollowup),    ...withApiKey });
+    api.addRoutes({ path: '/appointments/{id}/close',     methods: [apigwv2.HttpMethod.PATCH],  integration: int(appointmentClose),       ...withApiKey });
+
+    api.addRoutes({ path: '/owners/lookup',               methods: [apigwv2.HttpMethod.GET],    integration: int(ownerLookup),            ...withApiKey });
+    api.addRoutes({ path: '/pets/history',                methods: [apigwv2.HttpMethod.GET],    integration: int(petHistory),             ...withApiKey });
 
     // Donations
     api.addRoutes({ path: '/donations', methods: [apigwv2.HttpMethod.POST], integration: int(donationIntent), ...withAuth });
@@ -314,6 +381,9 @@ export class ApiStack extends cdk.Stack {
     api.addRoutes({ path: '/admin/orgs',        methods: [apigwv2.HttpMethod.GET],   integration: int(adminOrgList),   ...withAuth });
     api.addRoutes({ path: '/admin/orgs',        methods: [apigwv2.HttpMethod.POST],  integration: int(adminOrgCreate), ...withAuth });
     api.addRoutes({ path: '/admin/orgs/{orgId}',methods: [apigwv2.HttpMethod.PATCH], integration: int(adminOrgUpdate), ...withAuth });
+
+    // Admin reembolsos
+    api.addRoutes({ path: '/admin/appointments/{id}/refund-note', methods: [apigwv2.HttpMethod.POST], integration: int(adminRefundNote), ...withAuth });
 
     // ─── Outputs ───────────────────────────────────────────────────────────────
     this.apiUrl = api.apiEndpoint;

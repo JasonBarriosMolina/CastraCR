@@ -3,19 +3,25 @@ export type DonationStatus = 'pendiente' | 'completada' | 'fallida' | 'reembolsa
 
 export interface Donation {
   donationId: string;
-  monto: number; // in cents
+  /**
+   * Monto en CRC (colones). Sin decimales — ₡5,000 = 5000.
+   * 100% va a la org rescatista. La plataforma no retiene nada.
+   */
+  montoCRC: number;
   tipo: DonationType;
-  userId: string;
+  userId?: string;        // opcional — donantes anónimos
   campaignId?: string;
   orgRescateId: string;
-  stripeEventId: string;
+  onvoPayEventId: string; // era stripeEventId, renombrado
   estado: DonationStatus;
+  cubrimientoFee: boolean; // true = el donante cubrió la comisión de OnvoPay
   createdAt: string;
 }
 
 export interface CreateDonationInput {
-  monto: number;
+  /** Monto en CRC. Debe estar entre ₡500 y donacionMaxima de la org. */
+  montoCRC: number;
   campaignId?: string;
   orgRescateId: string;
-  cubrimientoDeFee?: boolean;
+  cubrimientoFee?: boolean;
 }

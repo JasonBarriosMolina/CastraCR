@@ -25,9 +25,19 @@ export interface OrgRescatista {
   email: string;
   telefono?: string;
   descripcion?: string;
+  /** URL de foto/logo de la org (opcional, para mostrar en página de donaciones) */
+  logoUrl?: string;
   sinpeMovil?: string;
   iban?: string;
   nombreBanco?: string;
+  /**
+   * Monto máximo de donación por transacción en CRC.
+   * Si no está definido, el máximo es ₡100,000.
+   * La org puede limitarlo a un monto menor.
+   */
+  donacionMaximaCRC?: number;
+  /** Si false, la org no aparece en la página pública de donaciones */
+  aceptaDonaciones?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -129,4 +139,10 @@ export const PLAN_PRICES = {
   escala:  { amountCents: 3400, isRecurring: true },
 } as const;
 
-export const DONATION_SPLIT_RATIO = 0.7; // 70% a org de rescate, 30% plataforma
+/**
+ * El 100% de cada donación va a la org rescatista.
+ * CastraCR no retiene ningún porcentaje de las donaciones.
+ * La comisión de OnvoPay (~3.9%) puede ser cubierta por el donante
+ * activando el toggle "cubrir comisión" en la página de donaciones.
+ */
+export const DONATION_ORG_RATIO = 1.0;
