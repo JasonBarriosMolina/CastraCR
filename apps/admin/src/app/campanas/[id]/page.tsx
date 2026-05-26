@@ -39,7 +39,6 @@ export default function AdminCampaignDetailPage() {
   const [venueLat, setVenueLat]             = useState('');
   const [venueLng, setVenueLng]             = useState('');
   const [venueCupos, setVenueCupos]         = useState('');
-  const [geocoding, setGeocoding]           = useState(false);
   const [savingVenue, setSavingVenue]       = useState(false);
 
   // ── edit venue ────────────────────────────────────────────────────────────
@@ -49,7 +48,6 @@ export default function AdminCampaignDetailPage() {
   const [evLat, setEvLat]         = useState('');
   const [evLng, setEvLng]         = useState('');
   const [evCupos, setEvCupos]     = useState('');
-  const [evGeocoding, setEvGeocoding] = useState(false);
   const [savingEdit, setSavingEdit]   = useState(false);
   const [removingVenueId, setRemovingVenueId] = useState<string | null>(null);
 
@@ -120,24 +118,7 @@ export default function AdminCampaignDetailPage() {
     );
   };
 
-  // ── Geocoding ──────────────────────────────────────────────────────────────
-  const geocode = async (address: string, onResult: (lat: string, lng: string, label: string) => void, setLoading: (v: boolean) => void) => {
-    setLoading(true);
-    setError('');
-    try {
-      const q = encodeURIComponent(`${address}, Costa Rica`);
-      const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${q}&format=json&limit=1&countrycodes=cr`, {
-        headers: { 'Accept-Language': 'es', 'User-Agent': 'CastraCR-Admin/1.0' },
-      });
-      const data = await res.json() as Array<{ lat: string; lon: string; display_name: string }>;
-      if (!data.length) { setError('No se encontraron coordenadas. Agrega más detalles a la dirección.'); return; }
-      const [first] = data;
-      onResult(parseFloat(first!.lat).toFixed(6), parseFloat(first!.lon).toFixed(6), first!.display_name.split(',').slice(0, 3).join(', '));
-    } catch { setError('Error al buscar coordenadas.'); }
-    finally { setLoading(false); }
-  };
-
-  // ── Add venue ──────────────────────────────────────────────────────────────
+// ── Add venue ──────────────────────────────────────────────────────────────
   const handleAddVenue = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!confirmIfActive('agregar una sede')) return;
@@ -470,24 +451,18 @@ export default function AdminCampaignDetailPage() {
                       <input type="number" min="1" value={evCupos} onChange={(e) => setEvCupos(e.target.value)} required className={inp} />
                     </div>
                     <div className="space-y-1 sm:col-span-2">
-                      <label className={lbl}>Dirección / señas *</label>
-                      <textarea value={evDir} onChange={(e) => setEvDir(e.target.value)} required rows={3} className={`${inp} resize-y`} />
-                      <button type="button" onClick={() => void geocode(evDir, (lat, lng, label) => { setEvLat(lat); setEvLng(lng); setSuccess(`📍 ${label}`); }, setEvGeocoding)} disabled={evGeocoding || !evDir.trim()} className="text-xs text-brand-600 hover:underline disabled:opacity-40">
-                        {evGeocoding ? '🔍 Buscando…' : '📍 Autocompletar coordenadas'}
-                      </button>
+                      <label className={lbl}>Ubicación en el mapa *</label>
                       <VenueMapPicker
                         lat={evLat ? parseFloat(evLat) : null}
                         lng={evLng ? parseFloat(evLng) : null}
                         onChange={(lat, lng) => { setEvLat(lat.toFixed(6)); setEvLng(lng.toFixed(6)); }}
+                        onPlaceSelect={(name) => { if (!evDir.trim()) setEvDir(name.split(',').slice(0, 3).join(',').trim()); }}
                       />
+                      {!evLat && <p className="text-xs text-amber-600">⚠️ Buscá el lugar o hacé click en el mapa para fijar la ubicación.</p>}
                     </div>
-                    <div className="space-y-1">
-                      <label className={lbl}>Latitud *</label>
-                      <input type="number" step="0.000001" value={evLat} onChange={(e) => setEvLat(e.target.value)} required className={inp} />
-                    </div>
-                    <div className="space-y-1">
-                      <label className={lbl}>Longitud *</label>
-                      <input type="number" step="0.000001" value={evLng} onChange={(e) => setEvLng(e.target.value)} required className={inp} />
+                    <div className="space-y-1 sm:col-span-2">
+                      <label className={lbl}>Dirección / señas para los asistentes</label>
+                      <textarea value={evDir} onChange={(e) => setEvDir(e.target.value)} rows={2} placeholder={'Ej: Frente al supermercado La Colonia, edificio azul\n200 m norte del parque central'} className={`${inp} resize-y`} />
                     </div>
                   </div>
                   <div className="flex gap-2">
@@ -532,24 +507,18 @@ export default function AdminCampaignDetailPage() {
                 <input type="number" min="1" value={venueCupos} onChange={(e) => setVenueCupos(e.target.value)} required className={inp} placeholder="Ej: 50" />
               </div>
               <div className="space-y-1 sm:col-span-2">
-                <label className={lbl}>Dirección / señas *</label>
-                <textarea value={venueDireccion} onChange={(e) => setVenueDireccion(e.target.value)} required rows={3} placeholder={'Ej: 200 m norte del parque central, San José\nFrente al supermercado La Colonia, edificio azul'} className={`${inp} resize-y`} />
-                <button type="button" onClick={() => void geocode(venueDireccion, (lat, lng, label) => { setVenueLat(lat); setVenueLng(lng); setSuccess(`📍 ${label}`); }, setGeocoding)} disabled={geocoding || !venueDireccion.trim()} className="text-xs text-brand-600 hover:underline disabled:opacity-40">
-                  {geocoding ? '🔍 Buscando…' : '📍 Autocompletar coordenadas GPS desde la dirección'}
-                </button>
+                <label className={lbl}>Ubicación en el mapa *</label>
                 <VenueMapPicker
                   lat={venueLat ? parseFloat(venueLat) : null}
                   lng={venueLng ? parseFloat(venueLng) : null}
                   onChange={(lat, lng) => { setVenueLat(lat.toFixed(6)); setVenueLng(lng.toFixed(6)); }}
+                  onPlaceSelect={(name) => { if (!venueDireccion.trim()) setVenueDireccion(name.split(',').slice(0, 3).join(',').trim()); }}
                 />
+                {!venueLat && <p className="text-xs text-amber-600">⚠️ Buscá el lugar o hacé click en el mapa para fijar la ubicación.</p>}
               </div>
-              <div className="space-y-1">
-                <label className={lbl}>Latitud *</label>
-                <input type="number" step="0.000001" value={venueLat} onChange={(e) => setVenueLat(e.target.value)} required className={inp} placeholder="Ej: 9.928100" />
-              </div>
-              <div className="space-y-1">
-                <label className={lbl}>Longitud *</label>
-                <input type="number" step="0.000001" value={venueLng} onChange={(e) => setVenueLng(e.target.value)} required className={inp} placeholder="Ej: -84.090700" />
+              <div className="space-y-1 sm:col-span-2">
+                <label className={lbl}>Dirección / señas para los asistentes</label>
+                <textarea value={venueDireccion} onChange={(e) => setVenueDireccion(e.target.value)} rows={2} placeholder={'Ej: 200 m norte del parque central, edificio azul'} className={`${inp} resize-y`} />
               </div>
             </div>
             <button type="submit" disabled={savingVenue} className={btnPrimary}>{savingVenue ? 'Agregando…' : '+ Agregar sede'}</button>
