@@ -3,6 +3,11 @@
  * Crea un payment intent en OnvoPay para una donación voluntaria en CRC.
  * El 100% del monto va a la organización rescatista — la plataforma no retiene nada.
  *
+ * Seguridad:
+ *  - Rate limit doble: 3 req/min por IP + 5 req/hora por userId
+ *  - Monto validado contra donacionMaxima de la org en DDB
+ *  - Verificación de que la org existe y acepta donaciones
+ *
  * Body: { montoCRC, orgRescateId, campaignId?, cubrimientoFee? }
  */
 import type { APIGatewayProxyHandlerV2WithJWTAuthorizer } from 'aws-lambda';
@@ -10,18 +15,29 @@ import { ddb, TABLE_NAME } from '../../shared/db.js';
 import { ok, errorResponse } from '../../shared/response.js';
 import { getAuthContext, requireRole } from '../../shared/auth.js';
 import { getSecrets } from '../../shared/secrets.js';
+import { getClientIp, checkRateLimit, rateLimitResponse } from '../../shared/rate-limit.js';
 import { GetCommand } from '@aws-sdk/lib-dynamodb';
 import { NotFoundError } from '@castrar-cr/utils';
 import type { CreateDonationInput } from '@castrar-cr/types';
 
 const ONVOPAY_API = 'https://api.onvopay.com/v1';
-const MONTO_MINIMO_CRC = 500;       // ₡500 mínimo
-const MONTO_MAXIMO_DEFAULT_CRC = 100_000; // ₡100,000 si la org no configura límite
+const MONTO_MINIMO_CRC = 500;
+const MONTO_MAXIMO_DEFAULT_CRC = 100_000;
 
 export const handler: APIGatewayProxyHandlerV2WithJWTAuthorizer = async (event) => {
+  // ── Rate limit por IP (capa 1) ────────────────────────────────────────────
+  const ip = getClientIp(event as unknown as Parameters<typeof getClientIp>[0]);
+  const ipLimited = await checkRateLimit(ip, 'donation-ip', 3, 60); // 3 req/min por IP
+  if (ipLimited) return rateLimitResponse(60);
+
   try {
     const authCtx = getAuthContext(event);
     requireRole(authCtx, 'Dueno', 'Organizador', 'SuperAdmin');
+
+    // ── Rate limit por userId (capa 2) ──────────────────────────────────────
+    // Previene que un usuario cree múltiples intents activos en paralelo
+    const userLimited = await checkRateLimit(authCtx.userId, 'donation-user', 5, 3600); // 5/hora
+    if (userLimited) return rateLimitResponse(3600);
 
     const body = JSON.parse(event.body ?? '{}') as CreateDonationInput;
     const { montoCRC, orgRescateId, campaignId, cubrimientoFee } = body;
@@ -40,12 +56,24 @@ export const handler: APIGatewayProxyHandlerV2WithJWTAuthorizer = async (event) 
       };
     }
 
-    // Validar org y respetar su límite de donación
+    // Validar org, que acepte donaciones y respetar su límite
     const orgRes = await ddb.send(new GetCommand({
       TableName: TABLE_NAME,
       Key: { PK: `ORG_RESCATE#${orgRescateId}`, SK: 'PROFILE' },
     }));
     if (!orgRes.Item) throw new NotFoundError('Organización rescatista');
+
+    // Si la org tiene aceptaDonaciones = false explícitamente, rechazar
+    const aceptaDonaciones = orgRes.Item['aceptaDonaciones'];
+    if (aceptaDonaciones === false) {
+      return {
+        statusCode: 400,
+        body: JSON.stringify({
+          error: 'Esta organización no acepta donaciones en este momento.',
+          code: 'ORG_NOT_ACCEPTING_DONATIONS',
+        }),
+      };
+    }
 
     const donacionMaxima = (orgRes.Item['donacionMaximaCRC'] as number | undefined) ?? MONTO_MAXIMO_DEFAULT_CRC;
     if (montoCRC > donacionMaxima) {

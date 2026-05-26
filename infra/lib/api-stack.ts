@@ -34,6 +34,10 @@ export class ApiStack extends cdk.Stack {
     const LAMBDAS_DIR = path.join(__dirname, '../../../lambdas');
 
     // ─── Shared config ─────────────────────────────────────────────────────────
+    const allowedOrigin = props.appEnv === 'prod'
+      ? 'https://castrar.cr'
+      : '*';
+
     const commonEnv: Record<string, string> = {
       DYNAMODB_TABLE_NAME: props.table.tableName,
       SECRET_ARN: props.secretArn,
@@ -43,6 +47,8 @@ export class ApiStack extends cdk.Stack {
       AWS_NODEJS_CONNECTION_REUSE_ENABLED: '1',
       PHOTOS_BUCKET_NAME: props.photosBucket.bucketName,
       CDN_DOMAIN: props.cdnDomain,
+      // Usado por lambdas/shared/response.ts para el header Access-Control-Allow-Origin
+      ALLOWED_ORIGIN: allowedOrigin,
     };
 
     const bundling: nodejs.BundlingOptions = {
@@ -268,10 +274,21 @@ export class ApiStack extends cdk.Stack {
           ? ['https://castrar.cr', 'https://admin.castrar.cr']
           : ['*'],
         allowMethods: [apigwv2.CorsHttpMethod.ANY],
-        allowHeaders: ['Content-Type', 'Authorization'],
+        allowHeaders: ['Content-Type', 'Authorization', 'X-Api-Key'],
         maxAge: cdk.Duration.days(1),
       },
     });
+
+    // Throttling en el default stage vía escape hatch L1.
+    // 500 burst · 200 req/s sostenido — protege contra picos y scrapers.
+    // Los endpoints de pago tienen rate limit adicional por IP en DDB (más granular).
+    const defaultStage = api.defaultStage?.node.defaultChild as apigwv2.CfnStage | undefined;
+    if (defaultStage) {
+      defaultStage.addPropertyOverride('DefaultRouteSettings', {
+        ThrottlingBurstLimit: 500,
+        ThrottlingRateLimit: 200,
+      });
+    }
 
     // API Key Authorizer — para endpoints del bot externo
     const apiKeyAuthorizerFn = fn('ApiKeyAuthorizer', 'authorizers/api-key.ts', {}, cdk.Duration.seconds(10), 128);
