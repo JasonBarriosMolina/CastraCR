@@ -141,9 +141,15 @@ export default function AdminCampaignDetailPage() {
   const handleAddVenue = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!confirmIfActive('agregar una sede')) return;
+    const lat = parseFloat(venueLat);
+    const lng = parseFloat(venueLng);
+    if (isNaN(lat) || isNaN(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+      setError('Coordenadas inválidas. Usá el botón "📍 Autocompletar" o el mapa para obtener coordenadas reales.');
+      return;
+    }
     setSavingVenue(true); setError(''); setSuccess('');
     try {
-      await updateCampaign(id, { addVenue: { nombre: venueName, direccion: venueDireccion, coordenadas: { lat: parseFloat(venueLat), lng: parseFloat(venueLng) }, cuposTotal: parseInt(venueCupos) } });
+      await updateCampaign(id, { addVenue: { nombre: venueName, direccion: venueDireccion, coordenadas: { lat, lng }, cuposTotal: parseInt(venueCupos) } });
       await refresh(); setSuccess('✅ Sede agregada');
       setVenueName(''); setVenueDireccion(''); setVenueLat(''); setVenueLng(''); setVenueCupos('');
     } catch (err: unknown) { setError((err as Error).message); }
@@ -162,9 +168,15 @@ export default function AdminCampaignDetailPage() {
   const handleEditVenue = async (e: React.FormEvent, venueId: string) => {
     e.preventDefault();
     if (!confirmIfActive('editar esta sede')) return;
+    const lat = parseFloat(evLat);
+    const lng = parseFloat(evLng);
+    if (isNaN(lat) || isNaN(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+      setError('Coordenadas inválidas. Usá el botón "📍 Autocompletar" o el mapa para obtener coordenadas reales.');
+      return;
+    }
     setSavingEdit(true); setError(''); setSuccess('');
     try {
-      await updateCampaign(id, { editVenue: { venueId, nombre: evName, direccion: evDir, coordenadas: { lat: parseFloat(evLat), lng: parseFloat(evLng) }, cuposTotal: parseInt(evCupos) } });
+      await updateCampaign(id, { editVenue: { venueId, nombre: evName, direccion: evDir, coordenadas: { lat, lng }, cuposTotal: parseInt(evCupos) } });
       await refresh(); setSuccess('✅ Sede actualizada'); setEditingVenueId(null);
     } catch (err: unknown) { setError((err as Error).message); }
     finally { setSavingEdit(false); }
