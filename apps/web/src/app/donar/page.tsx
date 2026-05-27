@@ -49,19 +49,21 @@ export default function DonarPage() {
   }, []);
 
   return (
-    <div>
+    <div className="md:-mx-4 md:-mt-6">
       {/* Header */}
-      <div className="bg-gradient-to-br from-brand-600 via-brand-500 to-cyan-500 px-4 pt-8 pb-5 relative overflow-hidden">
-        <div className="absolute -top-10 -right-10 w-48 h-48 rounded-full bg-white/10" />
-        <div className="max-w-lg mx-auto relative">
-          <span className="inline-block bg-white/20 text-white text-xs font-semibold px-3 py-1 rounded-full mb-4">
-            100% a la organización · CastraCR no cobra comisión
-          </span>
-          <h1 className="text-2xl font-extrabold text-white mb-2">Apoya la causa 💙</h1>
-          <p className="text-white/80 text-sm max-w-sm">
-            Cada donación ayuda a más mascotas a acceder a esterilización gratuita en Costa Rica.
-            No tenés que querer castrar una mascota para donar.
-          </p>
+      <div className="bg-gradient-to-br from-brand-700 via-brand-600 to-cyan-500 px-6 pt-6 pb-6 relative overflow-hidden">
+        <div className="absolute -top-20 -right-20 w-72 h-72 rounded-full bg-white/10" />
+        <div className="absolute bottom-0 -left-12 w-52 h-52 rounded-full bg-white/10" />
+        <div className="absolute top-8 left-1/2 -translate-x-1/2 w-32 h-32 rounded-full bg-white/5" />
+        <div className="max-w-md mx-auto relative text-center">
+          <div className="inline-flex items-center gap-2.5 mb-4">
+            <div className="w-11 h-11 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-sm">
+              <span className="text-2xl" aria-hidden>🐾</span>
+            </div>
+            <span className="text-xl font-bold text-white tracking-tight">CastraCR</span>
+          </div>
+          <h1 className="text-3xl font-extrabold text-white mb-2">Apoya la causa</h1>
+          <p className="text-white/70 text-sm">100% a la organización · CastraCR no cobra comisión</p>
         </div>
       </div>
 

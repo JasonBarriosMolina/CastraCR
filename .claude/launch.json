@@ -2,6 +2,12 @@
   "version": "0.0.1",
   "configurations": [
     {
+      "name": "docs",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["-e", "require('http').createServer((req,res)=>{const fs=require('fs'),path=require('path');let f=path.join('D:\\\\InHouse\\\\CastraCR\\\\docs',req.url==='/'?'/piloto.html':req.url);fs.readFile(f,(e,d)=>{if(e){res.writeHead(404);res.end('Not found');}else{res.writeHead(200,{'Content-Type':'text/html'});res.end(d);}});}).listen(3003)"],
+      "port": 3003
+    },
+    {
       "name": "web-dev",
       "runtimeExecutable": "node",
       "runtimeArgs": ["D:\\InHouse\\CastraCR\\node_modules\\next\\dist\\bin\\next", "dev", "--port", "3002"],

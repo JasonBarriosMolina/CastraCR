@@ -18,6 +18,7 @@ export default function manifest(): MetadataRoute.Manifest {
     shortcuts: [
       { name: 'Campañas', url: '/campanas', description: 'Ver campañas de esterilización' },
       { name: 'Mis mascotas', url: '/mis-mascotas', description: 'Gestionar mis mascotas' },
+      { name: 'Donar', url: '/donar', description: 'Donar a organizaciones rescatistas' },
     ],
   };
 }

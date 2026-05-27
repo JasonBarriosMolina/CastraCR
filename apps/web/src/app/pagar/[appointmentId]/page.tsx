@@ -261,12 +261,21 @@ export default function PagarCitaPage({
 
 function PageShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 md:-mx-4 md:-mt-6">
       {/* Header */}
-      <div className="bg-gradient-to-br from-brand-600 to-cyan-500 px-4 pt-8 pb-6">
-        <div className="max-w-lg mx-auto">
-          <p className="text-white/70 text-xs font-semibold uppercase tracking-wide mb-1">CastraCR</p>
-          <h1 className="text-xl font-extrabold text-white">Pago de tu cita de esterilización</h1>
+      <div className="bg-gradient-to-br from-brand-700 via-brand-600 to-cyan-500 px-6 pt-6 pb-6 relative overflow-hidden">
+        <div className="absolute -top-20 -right-20 w-72 h-72 rounded-full bg-white/10" />
+        <div className="absolute bottom-0 -left-12 w-52 h-52 rounded-full bg-white/10" />
+        <div className="absolute top-8 left-1/2 -translate-x-1/2 w-32 h-32 rounded-full bg-white/5" />
+        <div className="max-w-md mx-auto relative text-center">
+          <div className="inline-flex items-center gap-2.5 mb-4">
+            <div className="w-11 h-11 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-sm">
+              <span className="text-2xl" aria-hidden>🐾</span>
+            </div>
+            <span className="text-xl font-bold text-white tracking-tight">CastraCR</span>
+          </div>
+          <h1 className="text-3xl font-extrabold text-white mb-2">Pago de tu cita</h1>
+          <p className="text-white/70 text-sm">Esterilización de mascotas</p>
         </div>
       </div>
       <div className="px-4 py-6 max-w-lg mx-auto">{children}</div>

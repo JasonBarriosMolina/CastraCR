@@ -25,6 +25,7 @@ export class SecretStack extends cdk.Stack {
           TWILIO_AUTH_TOKEN: 'REPLACE_ME',
           TWILIO_WHATSAPP_NUMBER: 'REPLACE_ME',
           ANTHROPIC_API_KEY: 'REPLACE_ME',
+          BOT_API_KEY: 'REPLACE_ME',
           FIREBASE_SERVER_KEY: 'REPLACE_ME',
           GOOGLE_CLIENT_ID: 'REPLACE_ME',
           GOOGLE_CLIENT_SECRET: 'REPLACE_ME',

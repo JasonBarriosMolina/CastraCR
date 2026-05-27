@@ -1,3 +1,6 @@
+# Local MCP config (contains absolute paths, machine-specific)
+.mcp.json
+
 # Dependencies
 node_modules/
 .pnp
@@ -42,3 +45,9 @@ npm-debug.log*
 
 # Test coverage
 coverage/
+
+.vercel
+.env*.local
+
+.vercel
+.env*.local

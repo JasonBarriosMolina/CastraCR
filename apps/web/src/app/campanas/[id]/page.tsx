@@ -89,10 +89,12 @@ export default function CampaignDetailPage() {
   const STEP_LABELS = ['Sede', 'Turno', 'Mascotas', 'Confirmar'];
 
   return (
-    <div>
+    <div className="md:-mx-4 md:-mt-6">
       {/* ── Hero ── */}
-      <div className="bg-gradient-to-br from-brand-700 via-brand-500 to-cyan-500 px-4 pt-8 pb-10 relative overflow-hidden">
-        <div className="absolute -top-10 -right-10 w-48 h-48 rounded-full bg-white/10" />
+      <div className="bg-gradient-to-br from-brand-700 via-brand-600 to-cyan-500 px-6 pt-6 pb-6 relative overflow-hidden">
+        <div className="absolute -top-20 -right-20 w-72 h-72 rounded-full bg-white/10" />
+        <div className="absolute bottom-0 -left-12 w-52 h-52 rounded-full bg-white/10" />
+        <div className="absolute top-8 left-1/2 -translate-x-1/2 w-32 h-32 rounded-full bg-white/5" />
         <div className="max-w-2xl mx-auto relative">
           <button
             onClick={() => router.back()}
@@ -117,7 +119,7 @@ export default function CampaignDetailPage() {
         </div>
       </div>
 
-      <div className="px-4 -mt-7 max-w-2xl mx-auto pb-6 space-y-4">
+      <div className="px-4 mt-4 max-w-2xl mx-auto pb-6 space-y-4">
         {/* Progress bar */}
         <div className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100">
           <div className="flex items-center">

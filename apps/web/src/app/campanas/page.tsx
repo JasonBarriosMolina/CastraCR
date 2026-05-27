@@ -77,18 +77,32 @@ export default function CampanasPage() {
   );
 
   return (
-    <div>
+    <div className="md:-mx-4 md:-mt-6">
       {/* Header hero */}
-      <div className="bg-gradient-to-br from-brand-600 to-brand-500 px-4 pt-8 pb-10">
-        <div className="max-w-2xl mx-auto">
-          <p className="text-brand-100 text-xs font-semibold mb-1 uppercase tracking-widest">Costa Rica</p>
-          <h1 className="text-2xl font-extrabold text-white mb-1">Campañas cercanas</h1>
-          <p className="text-brand-100 text-sm">Campañas activas de esterilización cerca de ti</p>
+      <div className="bg-gradient-to-br from-brand-700 via-brand-600 to-cyan-500 px-6 pt-6 pb-6 relative overflow-hidden">
+        {/* Círculos decorativos */}
+        <div className="absolute -top-20 -right-20 w-72 h-72 rounded-full bg-white/10" />
+        <div className="absolute bottom-0 -left-12 w-52 h-52 rounded-full bg-white/10" />
+        <div className="absolute top-8 left-1/2 -translate-x-1/2 w-32 h-32 rounded-full bg-white/5" />
+
+        <div className="max-w-md mx-auto relative text-center">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2.5 mb-4 group focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60 rounded-xl"
+            aria-label="Volver al inicio de CastraCR"
+          >
+            <div className="w-11 h-11 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center group-hover:bg-white/30 transition-colors shadow-sm">
+              <span className="text-2xl" aria-hidden>🐾</span>
+            </div>
+            <span className="text-xl font-bold text-white tracking-tight">CastraCR</span>
+          </Link>
+          <h1 className="text-3xl font-extrabold text-white mb-2">Campañas cercanas</h1>
+          <p className="text-white/70 text-sm">Campañas activas de esterilización cerca de ti</p>
         </div>
       </div>
 
       {/* Search bar + location overlapping hero */}
-      <div className="px-4 -mt-7 mb-4 max-w-2xl mx-auto md:max-w-5xl space-y-2">
+      <div className="px-4 mt-4 mb-4 max-w-2xl mx-auto md:max-w-5xl space-y-2">
         <div className="relative">
           <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />

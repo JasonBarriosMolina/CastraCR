@@ -108,30 +108,39 @@ export default function MisMascotasPage() {
   };
 
   return (
-    <div>
+    <div className="md:-mx-4 md:-mt-6">
       {/* Header */}
-      <div className="bg-gradient-to-br from-brand-600 to-brand-500 px-4 pt-8 pb-10">
-        <div className="max-w-2xl mx-auto flex items-end justify-between">
-          <div>
-            <p className="text-brand-100 text-xs font-semibold mb-1 uppercase tracking-widest">Mi cuenta</p>
-            <h1 className="text-2xl font-extrabold text-white">Mis Mascotas</h1>
-            <p className="text-brand-100 text-sm mt-0.5">Gestiona el perfil de tus mascotas</p>
+      <div className="bg-gradient-to-br from-brand-700 via-brand-600 to-cyan-500 px-6 pt-6 pb-6 relative overflow-hidden">
+        <div className="absolute -top-20 -right-20 w-72 h-72 rounded-full bg-white/10" />
+        <div className="absolute bottom-0 -left-12 w-52 h-52 rounded-full bg-white/10" />
+        <div className="absolute top-8 left-1/2 -translate-x-1/2 w-32 h-32 rounded-full bg-white/5" />
+        <div className="max-w-md mx-auto relative text-center">
+          <div className="inline-flex items-center gap-2.5 mb-4">
+            <div className="w-11 h-11 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-sm">
+              <span className="text-2xl" aria-hidden>🐾</span>
+            </div>
+            <span className="text-xl font-bold text-white tracking-tight">CastraCR</span>
           </div>
+          <h1 className="text-3xl font-extrabold text-white mb-2">Mis Mascotas</h1>
+          <p className="text-white/70 text-sm">Gestiona el perfil de tus mascotas</p>
+        </div>
+      </div>
+
+      <div className="px-4 mt-4 max-w-2xl mx-auto space-y-4 pb-6">
+        {error && (
+          <div className="bg-red-50 border border-red-100 text-red-700 px-4 py-3 rounded-2xl text-sm">⚠️ {error}</div>
+        )}
+
+        {!loading && pets.length > 0 && !showForm && (
           <button
-            onClick={() => setShowForm((v) => !v)}
-            className="flex items-center gap-1.5 bg-white text-brand-600 font-bold text-sm px-4 py-2.5 rounded-2xl shadow-sm hover:shadow-md transition-all"
+            onClick={() => setShowForm(true)}
+            className="w-full flex items-center justify-center gap-2 bg-white border-2 border-dashed border-brand-200 text-brand-600 font-semibold text-sm py-3 rounded-2xl hover:border-brand-400 hover:bg-brand-50 transition-all"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
             </svg>
-            Agregar
+            Agregar mascota
           </button>
-        </div>
-      </div>
-
-      <div className="px-4 -mt-7 max-w-2xl mx-auto space-y-4 pb-6">
-        {error && (
-          <div className="bg-red-50 border border-red-100 text-red-700 px-4 py-3 rounded-2xl text-sm">⚠️ {error}</div>
         )}
 
         {/* Add form */}

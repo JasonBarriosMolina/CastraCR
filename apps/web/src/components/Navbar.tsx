@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { getCurrentUser, signOut } from 'aws-amplify/auth';
+import { getCurrentUser, fetchUserAttributes, signOut } from 'aws-amplify/auth';
 
 const NAV_LINKS = [
   { href: '/campanas', label: 'Campañas' },
@@ -14,13 +14,17 @@ const NAV_LINKS = [
 
 export function Navbar() {
   const pathname = usePathname();
-  const [user, setUser] = useState<{ username: string } | null>(null);
+  const [displayName, setDisplayName] = useState<string | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     getCurrentUser()
-      .then(setUser)
-      .catch(() => setUser(null));
+      .then(() => fetchUserAttributes())
+      .then((attrs) => {
+        const name = attrs.name ?? attrs.email ?? '';
+        setDisplayName(name.includes('@') ? name.split('@')[0]! : name);
+      })
+      .catch(() => setDisplayName(null));
   }, []);
 
   return (
@@ -56,17 +60,17 @@ export function Navbar() {
 
         {/* Auth */}
         <div className="flex items-center gap-3">
-          {user ? (
+          {displayName !== null ? (
             <div className="relative">
               <button
                 onClick={() => setMenuOpen((v) => !v)}
                 className="flex items-center gap-2.5 bg-slate-50 hover:bg-brand-50 px-3 py-2 rounded-xl transition-colors"
               >
                 <div className="w-7 h-7 rounded-full bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center text-white text-xs font-bold">
-                  {user.username[0]?.toUpperCase()}
+                  {displayName[0]?.toUpperCase()}
                 </div>
                 <span className="text-sm text-slate-700 font-medium max-w-[100px] truncate">
-                  {user.username.split('@')[0]}
+                  {displayName}
                 </span>
                 <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />

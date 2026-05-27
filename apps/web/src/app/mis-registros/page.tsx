@@ -53,17 +53,25 @@ export default function MisRegistrosPage() {
   };
 
   return (
-    <div>
+    <div className="md:-mx-4 md:-mt-6">
       {/* Header */}
-      <div className="bg-gradient-to-br from-brand-600 to-brand-500 px-4 pt-8 pb-10">
-        <div className="max-w-2xl mx-auto">
-          <p className="text-brand-100 text-xs font-semibold mb-1 uppercase tracking-widest">Mi cuenta</p>
-          <h1 className="text-2xl font-extrabold text-white">Mis Registros</h1>
-          <p className="text-brand-100 text-sm mt-0.5">Historial de campañas de esterilización</p>
+      <div className="bg-gradient-to-br from-brand-700 via-brand-600 to-cyan-500 px-6 pt-6 pb-6 relative overflow-hidden">
+        <div className="absolute -top-20 -right-20 w-72 h-72 rounded-full bg-white/10" />
+        <div className="absolute bottom-0 -left-12 w-52 h-52 rounded-full bg-white/10" />
+        <div className="absolute top-8 left-1/2 -translate-x-1/2 w-32 h-32 rounded-full bg-white/5" />
+        <div className="max-w-md mx-auto relative text-center">
+          <div className="inline-flex items-center gap-2.5 mb-4">
+            <div className="w-11 h-11 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-sm">
+              <span className="text-2xl" aria-hidden>🐾</span>
+            </div>
+            <span className="text-xl font-bold text-white tracking-tight">CastraCR</span>
+          </div>
+          <h1 className="text-3xl font-extrabold text-white mb-2">Mis Registros</h1>
+          <p className="text-white/70 text-sm">Historial de campañas de esterilización</p>
         </div>
       </div>
 
-      <div className="px-4 -mt-7 max-w-2xl mx-auto space-y-4 pb-6">
+      <div className="px-4 mt-4 max-w-2xl mx-auto space-y-4 pb-6">
         {error && (
           <div className="bg-red-50 border border-red-100 text-red-700 px-4 py-3 rounded-2xl text-sm">⚠️ {error}</div>
         )}
