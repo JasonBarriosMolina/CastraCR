@@ -80,7 +80,7 @@ function LoginContent() {
     // Escapar el padding del layout main en desktop con márgenes negativos
     <div className="md:-mx-4 md:-mt-6 min-h-[calc(100vh-4rem)] flex flex-col">
       {/* Hero gradient — full bleed */}
-      <div className="bg-gradient-to-br from-brand-700 via-brand-600 to-cyan-500 px-6 pt-14 pb-28 relative overflow-hidden flex-shrink-0">
+      <div className="bg-gradient-to-br from-brand-700 via-brand-600 to-cyan-500 px-6 pt-10 pb-20 relative overflow-hidden flex-shrink-0">
         {/* Círculos decorativos */}
         <div className="absolute -top-20 -right-20 w-72 h-72 rounded-full bg-white/10" />
         <div className="absolute bottom-0 -left-12 w-52 h-52 rounded-full bg-white/10" />
@@ -120,7 +120,7 @@ function LoginContent() {
       </div>
 
       {/* Form card — overlapping the hero */}
-      <div className="flex-1 px-4 -mt-16 pb-10">
+      <div className="flex-1 px-4 -mt-10 pb-10">
         <div className="max-w-md mx-auto bg-white rounded-3xl shadow-2xl border border-slate-100/80 overflow-hidden">
           {/* Color strip */}
           <div className="h-1 bg-gradient-to-r from-brand-400 via-cyan-400 to-brand-500" />
