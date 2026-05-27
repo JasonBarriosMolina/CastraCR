@@ -40,7 +40,13 @@ async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
     throw new Error(`Error del servidor (${res.status})`);
   }
 
-  if (!res.ok) throw new Error(json.error ?? json.message ?? 'Error desconocido');
+  if (!res.ok) {
+    const msg = json.error ?? json.message ?? `Error HTTP ${res.status}`;
+    const err = new Error(msg);
+    (err as Error & { code?: string; status?: number }).status = res.status;
+    if (json.code) (err as Error & { code?: string }).code = json.code as string;
+    throw err;
+  }
   return json.data as T;
 }
 
